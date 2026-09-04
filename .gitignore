@@ -1,0 +1,14 @@
+# Node
+node_modules/
+
+# Cloudflare local state
+.wrangler/
+.dev.vars
+
+# Datos locales del scraper (no subir a Pages)
+productos.db
+page.html
+
+# Sist
+.DS_Store
+__pycache__/

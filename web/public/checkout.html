@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20511.654%20511.654%22%3E%3Cpath%20fill%3D%22%23e94560%22%20d%3D%22M475.147%2C76.52c-35.136-36.736-73.963-55.36-115.413-55.36c-41.003%2C0-78.421%2C20.693-103.979%2C55.915C230.347%2C41.854%2C193.185%2C21.16%2C152.523%2C21.16c-41.216%2C0-78.933%2C18.048-115.243%2C55.189C13.494%2C100.691-0.458%2C138.28%2C0.011%2C176.915c0.363%2C30.549%2C9.707%2C75.648%2C52.181%2C117.099c33.024%2C32.213%2C187.2%2C188.544%2C188.757%2C190.123c3.989%2C4.075%2C9.472%2C6.357%2C15.189%2C6.357c5.696%2C0%2C11.179-2.283%2C15.189-6.357c1.557-1.579%2C155.733-157.909%2C188.736-190.123C535.414%2C220.52%2C517.238%2C120.467%2C475.147%2C76.52zM362.657%2C255.827c0%2C11.776-9.536%2C21.333-21.333%2C21.333s-21.333-9.557-21.333-21.333v-21.333h-128v21.333c0%2C11.776-9.536%2C21.333-21.333%2C21.333c-11.797%2C0-21.333-9.557-21.333-21.333v-85.333c0-11.776%2C9.536-21.333%2C21.333-21.333c11.797%2C0%2C21.333%2C9.557%2C21.333%2C21.333v21.333h128v-21.333c0-11.776%2C9.536-21.333%2C21.333-21.333s21.333%2C9.557%2C21.333%2C21.333V255.827z%22/%3E%3C/svg%3E" type="image/svg+xml" />
+  <title>Finalizar compra · Suplementos Deportivos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="brand-row">
+        <div class="brand">Suplemen<strong>TOPS</strong></div>
+      </div>
+    </div>
+  </header>
+  <main class="page">
+    <h1 class="page-title">Finalizar compra</h1>
+
+  <div class="checkout-wrap">
+    <div class="checkout-card">
+      <h2>Resumen del pedido</h2>
+      <div class="checkout-summary" id="summary"></div>
+      <div class="total-big" id="total"></div>
+
+      <hr style="margin:16px 0;border:none;border-top:1px solid #eee" />
+
+      <form id="checkout-form">
+        <div class="field">
+          <label>Nombre completo *</label>
+          <input id="f-nombre" required autocomplete="name" />
+        </div>
+
+        <div class="field">
+          <label>Dirección *</label>
+          <textarea id="f-direccion" required placeholder="Calle, número, colonia/barrio, referencia..."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Ubicación en mapa (opcional, como en WhatsApp)</label>
+          <button type="button" class="btn btn-secondary location-btn" id="btn-ubicacion">
+            <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Compartir ubicación
+          </button>
+          <div class="loc-info" id="loc-info"></div>
+        </div>
+
+        <div class="field">
+          <label>Número de teléfono *</label>
+          <input id="f-telefono" type="tel" required autocomplete="tel" placeholder="+56 9 1234 5678" />
+        </div>
+
+        <div class="field">
+          <label>Número alternativo (opcional)</label>
+          <input id="f-telefono_alt" type="tel" autocomplete="tel" placeholder="+56 9 0000 0000" />
+        </div>
+
+        <div class="field">
+          <label>Nota / instrucciones (opcional)</label>
+          <textarea id="f-nota" placeholder="Por ejemplo: entregar después de las 6pm..."></textarea>
+        </div>
+
+        <p class="required-note">* Campos obligatorios. Solo el número alternativo y la nota son opcionales.</p>
+
+        <div class="modal-actions">
+          <a href="index.html" class="btn btn-ghost">Seguir viendo</a>
+          <button type="submit" class="btn btn-primary" id="btn-submit">Confirmar y enviar orden</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="cart.js"></script>
+  <script src="checkout.js"></script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20511.654%20511.654%22%3E%3Cpath%20fill%3D%22%23e94560%22%20d%3D%22M475.147%2C76.52c-35.136-36.736-73.963-55.36-115.413-55.36c-41.003%2C0-78.421%2C20.693-103.979%2C55.915C230.347%2C41.854%2C193.185%2C21.16%2C152.523%2C21.16c-41.216%2C0-78.933%2C18.048-115.243%2C55.189C13.494%2C100.691-0.458%2C138.28%2C0.011%2C176.915c0.363%2C30.549%2C9.707%2C75.648%2C52.181%2C117.099c33.024%2C32.213%2C187.2%2C188.544%2C188.757%2C190.123c3.989%2C4.075%2C9.472%2C6.357%2C15.189%2C6.357c5.696%2C0%2C11.179-2.283%2C15.189-6.357c1.557-1.579%2C155.733-157.909%2C188.736-190.123C535.414%2C220.52%2C517.238%2C120.467%2C475.147%2C76.52zM362.657%2C255.827c0%2C11.776-9.536%2C21.333-21.333%2C21.333s-21.333-9.557-21.333-21.333v-21.333h-128v21.333c0%2C11.776-9.536%2C21.333-21.333%2C21.333c-11.797%2C0-21.333-9.557-21.333-21.333v-85.333c0-11.776%2C9.536-21.333%2C21.333-21.333c11.797%2C0%2C21.333%2C9.557%2C21.333%2C21.333v21.333h128v-21.333c0-11.776%2C9.536-21.333%2C21.333-21.333s21.333%2C9.557%2C21.333%2C21.333V255.827z%22/%3E%3C/svg%3E" type="image/svg+xml" />
+  <title>Administrar · Catálogo Suplementos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header admin-header">
+    <div class="app-header-inner">
+      <div class="brand-row">
+        <div class="brand">Suplemen<strong>TOPS</strong><span class="brand-admin">admin</span></div>
+      </div>
+    </div>
+  </header>
+  <main class="page">
+  <div class="alert info hidden" id="alert"></div>
+
+  <!-- Pantalla de acceso protegido -->
+  <div class="admin-login" id="admin-login">
+    <div class="cat-form" style="flex-direction:column;align-items:stretch;max-width:420px;margin:0 auto">
+      <p style="margin:0 0 6px;color:var(--muted)">El panel está protegido. Solicita un código a tu bot de Telegram.</p>
+      <button type="button" class="btn btn-primary" id="btn-send-code">Enviar código a mi Telegram</button>
+      <div class="field" style="margin-top:10px">
+        <label>Código recibido</label>
+        <input id="admin-code-input" inputmode="numeric" placeholder="0000000" />
+      </div>
+      <button type="button" class="btn btn-secondary" id="btn-verify">Acceder</button>
+      <a href="index.html" class="btn btn-ghost" style="text-align:center">Volver al catálogo</a>
+    </div>
+  </div>
+
+  <div id="admin-panel">
+  <div class="toolbar" style="justify-content:space-between">
+    <a href="index.html" class="btn btn-secondary">← Ver catálogo</a>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="productos" onclick="switchTab('productos')">Productos</button>
+    <button class="tab-btn" data-tab="categorias" onclick="switchTab('categorias')">Categorías</button>
+    <button class="tab-btn" data-tab="ordenes" onclick="switchTab('ordenes')">Órdenes</button>
+    <button class="tab-btn" data-tab="notificaciones" onclick="switchTab('notificaciones')">Notificaciones</button>
+  </div>
+
+  <!-- ======== PRODUCTOS ======== -->
+  <div class="tab-panel active" id="panel-productos">
+    <div class="toolbar" style="justify-content:flex-end">
+      <button class="btn btn-primary" onclick="openModal()">+ Añadir producto</button>
+    </div>
+    <div class="grid admin-grid" id="grid"></div>
+    <div class="empty hidden" id="empty">No hay productos.</div>
+  </div>
+
+  <!-- ======== CATEGORÍAS ======== -->
+  <div class="tab-panel" id="panel-categorias">
+    <form class="cat-form" id="cat-form">
+      <input id="cat-input" placeholder="Nombre de la nueva categoría" required />
+      <button type="submit" class="btn btn-primary">Crear categoría</button>
+    </form>
+    <div class="cat-list" id="cat-list"></div>
+    <div class="empty hidden" id="cat-empty">No hay categorías.</div>
+  </div>
+
+  <!-- ======== ÓRDENES ======== -->
+  <div class="tab-panel" id="panel-ordenes">
+    <div class="orders-bar">
+      <select id="ordenes-filtro" class="orders-filter" onchange="loadOrdenes()">
+        <option value="">Todas</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="despachada">Despachada</option>
+        <option value="entregada">Entregada</option>
+      </select>
+      <button class="btn btn-secondary" onclick="loadOrdenes()">⟳</button>
+    </div>
+    <div id="ordenes-list"></div>
+    <div class="empty hidden" id="ordenes-empty">No hay órdenes.</div>
+  </div>
+
+  <!-- ======== NOTIFICACIONES ======== -->
+  <div class="tab-panel" id="panel-notificaciones">
+    <div class="toolbar" style="justify-content:space-between;flex-wrap:wrap">
+      <p style="color:var(--muted);margin:0">Chat IDs de Telegram que recibirán notificaciones de nuevas órdenes.</p>
+    </div>
+    <form class="cat-form" id="chatid-form">
+      <input id="chatid-input" placeholder="Chat ID (ej: 123456789)" required />
+      <input id="chatid-label" placeholder="Etiqueta (ej: Carlos, Tienda...)" />
+      <button type="submit" class="btn btn-primary">Añadir</button>
+    </form>
+    <div class="cat-list" id="chatid-list"></div>
+    <div class="empty hidden" id="chatid-empty">No hay chat IDs configurados.</div>
+  </div>
+
+  <!-- Modal producto -->
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <h2 id="modal-title">Nuevo producto</h2>
+      <form id="form">
+        <input type="hidden" id="f-id" />
+        <div class="field">
+          <label>Título *</label>
+          <input id="f-titulo" required />
+        </div>
+        <div class="field">
+          <label>Descripción</label>
+          <textarea id="f-descripcion"></textarea>
+        </div>
+        <div class="field">
+          <label>Categoría</label>
+          <select id="f-categoria" class="select"></select>
+        </div>
+        <div class="field">
+          <label>Precio</label>
+          <input id="f-precio" placeholder="$24.00" />
+        </div>
+        <div class="field">
+          <label>Ranking</label>
+          <input id="f-ranking" placeholder="#1" />
+        </div>
+        <div class="field">
+          <label>Rating</label>
+          <input id="f-rating" placeholder="4.6 out of 5 stars" />
+        </div>
+        <div class="field">
+          <label>Nº reseñas</label>
+          <input id="f-num_reviews" placeholder="6,435" />
+        </div>
+        <div class="field">
+          <label>Nº ofertas</label>
+          <input id="f-num_ofertas" placeholder="2" />
+        </div>
+        <div class="field">
+          <label>Existencia (stock)</label>
+          <input id="f-stock" type="number" min="0" placeholder="10" />
+        </div>
+        <div class="field">
+          <label>ASIN</label>
+          <input id="f-asin" placeholder="B07SH31T9V" />
+        </div>
+        <div class="field">
+          <label>URL del producto</label>
+          <input id="f-url_producto" />
+        </div>
+        <div class="field">
+          <label>Imágenes (una o más, pegá los links)</label>
+          <div id="f-imagenes" class="img-inputs"></div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addImgInput()">+ Agregar otra imagen</button>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal detalle de orden -->
+  <div class="modal" id="orden-modal">
+    <div class="modal-card">
+      <h2>Detalle de la orden</h2>
+      <div class="order-detail" id="orden-detalle"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeOrdenModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+  </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

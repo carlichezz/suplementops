@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20511.654%20511.654%22%3E%3Cpath%20fill%3D%22%23e94560%22%20d%3D%22M475.147%2C76.52c-35.136-36.736-73.963-55.36-115.413-55.36c-41.003%2C0-78.421%2C20.693-103.979%2C55.915C230.347%2C41.854%2C193.185%2C21.16%2C152.523%2C21.16c-41.216%2C0-78.933%2C18.048-115.243%2C55.189C13.494%2C100.691-0.458%2C138.28%2C0.011%2C176.915c0.363%2C30.549%2C9.707%2C75.648%2C52.181%2C117.099c33.024%2C32.213%2C187.2%2C188.544%2C188.757%2C190.123c3.989%2C4.075%2C9.472%2C6.357%2C15.189%2C6.357c5.696%2C0%2C11.179-2.283%2C15.189-6.357c1.557-1.579%2C155.733-157.909%2C188.736-190.123C535.414%2C220.52%2C517.238%2C120.467%2C475.147%2C76.52zM362.657%2C255.827c0%2C11.776-9.536%2C21.333-21.333%2C21.333s-21.333-9.557-21.333-21.333v-21.333h-128v21.333c0%2C11.776-9.536%2C21.333-21.333%2C21.333c-11.797%2C0-21.333-9.557-21.333-21.333v-85.333c0-11.776%2C9.536-21.333%2C21.333-21.333c11.797%2C0%2C21.333%2C9.557%2C21.333%2C21.333v21.333h128v-21.333c0-11.776%2C9.536-21.333%2C21.333-21.333s21.333%2C9.557%2C21.333%2C21.333V255.827z%22/%3E%3C/svg%3E" type="image/svg+xml" />
+  <title>Catálogo · Suplementos Deportivos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="brand-row">
+        <div class="brand"><span class="brand-word">Suplemen<strong>TOPS</strong></span><span class="brand-mini">S<strong>T</strong></span></div>
+        <div class="brand-actions">
+          <div class="search-anim" id="search-anim">
+            <span class="search_btn" id="search-toggle" aria-hidden="true"></span>
+            <input type="text" id="search" class="search_item" placeholder="" readonly />
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main class="page">
+    <h1 class="page-title" data-i18n="page.title"></h1>
+
+  <div class="alert info hidden" id="alert"></div>
+
+  <div class="toolbar">
+    <div class="cats scroll-x" id="cats"></div>
+    <div class="filter-wrap">
+      <button class="filter-btn" id="sort-btn" aria-label="Ordenar"><i class="fa fa-sliders" aria-hidden="true"></i></button>
+      <div class="sort-menu hidden" id="sort-menu" data-title="Ordenar por">
+        <button data-sort="ranking" class="active" data-i18n="sort.ranking" onclick="chooseSort(this)"></button>
+        <button data-sort="price-asc" data-i18n="sort.price-asc" onclick="chooseSort(this)"></button>
+        <button data-sort="price-desc" data-i18n="sort.price-desc" onclick="chooseSort(this)"></button>
+        <button data-sort="name" data-i18n="sort.name" onclick="chooseSort(this)"></button>
+        <button data-sort="rating" data-i18n="sort.rating" onclick="chooseSort(this)"></button>
+      </div>
+    </div>
+  </div>
+
+  <p class="count" id="count"></p>
+  <div class="grid" id="grid"></div>
+  <div class="empty hidden" id="empty">No se encontraron productos.</div>
+  </main>
+
+  <!-- Botón flotante del carrito -->
+  <button class="cart-fab" id="cart-fab" aria-label="Carrito"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="badge-count zero" id="cart-count">0</span></button>
+
+  <!-- Overlay y panel del carrito -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <aside class="cart-panel" id="cart-panel">
+    <div class="cart-panel-head">
+      <span>Tu carrito</span>
+      <button class="cart-close" id="cart-close" aria-label="Cerrar">×</button>
+    </div>
+    <div class="cart-items" id="cart-items"></div>
+    <div class="cart-panel-foot">
+      <div class="cart-total-row"><span>Total</span><span id="cart-total">$0.00</span></div>
+      <button class="btn btn-primary" id="cart-checkout">Comprar</button>
+    </div>
+  </aside>
+
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+  <script src="cart.js"></script>
+  <script>
+    let all = [];
+
+    async function load() {
+      try {
+        all = await api.list();
+        Cart.setProductBase('producto.html?id=');
+        Cart.init(all);
+        populateCats();
+        render();
+      } catch (e) {
+        showAlert('No se pudieron cargar los productos.', 'error');
+      }
+    }
+
+    function showAlert(msg, type) {
+      const el = document.getElementById('alert');
+      el.className = `alert ${type}`;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 2000);
+    }
+
+    let currentCat = '';
+    let currentSort = 'ranking';
+
+    function render() {
+      const q = document.getElementById('search').value.toLowerCase();
+      let items = all.filter((p) =>
+        ((p.titulo || '').toLowerCase().includes(q) ||
+        (p.descripcion || '').toLowerCase().includes(q)) &&
+        (!currentCat || String(p.categoria_id) === currentCat)
+      );
+
+      items.sort((a, b) => {
+        switch (currentSort) {
+          case 'price-asc':
+            return priceNum(a.precio) - priceNum(b.precio);
+          case 'price-desc':
+            return priceNum(b.precio) - priceNum(a.precio);
+          case 'name':
+            return (a.titulo || '').localeCompare(b.titulo || '');
+          case 'rating':
+            return ratingNum(b.rating) - ratingNum(a.rating);
+          default:
+            return rankNum(a.ranking) - rankNum(b.ranking);
+        }
+      });
+
+      const grid = document.getElementById('grid');
+      document.getElementById('count').textContent = items.length + ' ' + t('count.products');
+      document.getElementById('empty').classList.toggle('hidden', items.length > 0);
+      grid.innerHTML = items.map(cardHTML).join('');
+
+      grid.querySelectorAll('img.lazy').forEach((img) => {
+        img.addEventListener('error', () => (img.src = ''));
+      });
+    }
+
+    function cardHTML(p) {
+      const img = p.imagen_url
+        ? `<img loading="lazy" class="lazy" src="${esc(p.imagen_url)}" alt="${esc(p.titulo)}" />`
+        : '';
+      const soldOut = p.stock != null && p.stock <= 0;
+      return `
+        <div class="card">
+          <a class="img-wrap" style="position:relative" href="producto.html?id=${p.id}">
+            ${p.ranking ? `<span class="badge">${esc(p.ranking)}</span>` : ''}
+            ${img}
+          </a>
+          <div class="body">
+            <h3><a href="producto.html?id=${p.id}" style="color:inherit;text-decoration:none">${esc(p.titulo)}</a></h3>
+            ${p.descripcion && p.descripcion !== p.titulo ? `<p class="desc">${esc(p.descripcion)}</p>` : ''}
+            <div class="meta">
+              ${p.categoria_nombre ? `<span class="cat-chip">${esc(p.categoria_nombre)}</span>` : ''}
+              ${p.rating ? `<span class="stars"><svg class="star-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${esc(p.rating.replace(' out of 5 stars',''))}</span>` : ''}
+            </div>
+            <div class="price">${esc(p.precio)}</div>
+            ${stockTag(p)}
+            <div class="actions">
+              <button class="btn btn-add" ${soldOut ? 'disabled' : ''} onclick="addToCart(${p.id},1)">${soldOut ? t('sold.out') : t('add.cart')}</button>
+              <button class="btn btn-buy" ${soldOut ? 'disabled' : ''} onclick="buyNow(${p.id})">${t('buy.now')}</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function populateCats() {
+      const wrap = document.getElementById('cats');
+      const cats = {};
+      all.forEach((p) => {
+        if (p.categoria_id && !cats[p.categoria_id]) {
+          cats[p.categoria_id] = p.categoria_nombre || ('Categoría ' + p.categoria_id);
+        }
+      });
+      const chips = Object.entries(cats)
+        .sort((a, b) => a[1].localeCompare(b[1]))
+        .map(([id, name]) =>
+          `<button class="cat-chip" data-cat="${id}" onclick="setCat('${id}')">${esc(name)}</button>`
+        )
+        .join('');
+      wrap.innerHTML =
+        `<button class="cat-chip active" data-cat="" onclick="setCat('')">${t('cats.all')}</button>` + chips;
+    }
+
+    function setCat(id) {
+      currentCat = id;
+      document.querySelectorAll('#cats .cat-chip').forEach((c) => {
+        c.classList.toggle('active', c.getAttribute('data-cat') === id);
+      });
+      render();
+    }
+
+    function openSearch() {
+      const bar = document.querySelector('.app-header');
+      const anim = document.getElementById('search-anim');
+      const input = document.getElementById('search');
+      bar.classList.add('search-active');
+      anim.classList.add('open');
+      input.removeAttribute('readonly');
+      setTimeout(() => input.focus(), 250);
+    }
+
+    function closeSearch() {
+      const bar = document.querySelector('.app-header');
+      const anim = document.getElementById('search-anim');
+      const input = document.getElementById('search');
+      bar.classList.remove('search-active');
+      anim.classList.remove('open');
+      input.setAttribute('readonly', '');
+      input.blur();
+    }
+
+    const searchInput = document.getElementById('search');
+    searchInput.addEventListener('input', render);
+
+    document.getElementById('search-toggle').addEventListener('click', (e) => {
+      e.preventDefault();
+      const anim = document.getElementById('search-anim');
+      if (anim.classList.contains('open')) {
+        closeSearch();
+      } else {
+        openSearch();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#sort-btn') && !e.target.closest('#sort-menu')) {
+        document.getElementById('sort-menu').classList.add('hidden');
+      }
+      const anim = document.getElementById('search-anim');
+      if (anim.classList.contains('open') && !e.target.closest('.search-anim')) {
+        closeSearch();
+      }
+    });
+
+    document.getElementById('sort-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const anim = document.getElementById('search-anim');
+      if (anim.classList.contains('open')) closeSearch();
+      const menu = document.getElementById('sort-menu');
+      const btn = document.getElementById('sort-btn');
+      const hidden = menu.classList.contains('hidden');
+      menu.classList.toggle('hidden');
+      if (hidden) {
+        const r = btn.getBoundingClientRect();
+        menu.style.top = r.bottom + 6 + 'px';
+        menu.style.right = window.innerWidth - r.right + 'px';
+      }
+    });
+    window.chooseSort = function (btn) {
+      currentSort = btn.getAttribute('data-sort');
+      document.querySelectorAll('#sort-menu button').forEach((b) => {
+        b.classList.toggle('active', b === btn);
+      });
+      document.getElementById('sort-menu').classList.add('hidden');
+      render();
+    };
+
+    // Disparar re-render del panel carrito cuando cambie
+    document.addEventListener('cartchange', () => Cart.refresh(all));
+
+    function applyText() {
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        el.textContent = t(el.getAttribute('data-i18n'));
+      });
+      const search = document.getElementById('search');
+      if (search) search.placeholder = t('search.ph');
+      const sortMenu = document.getElementById('sort-menu');
+      if (sortMenu) sortMenu.setAttribute('data-title', t('sort.title'));
+    }
+
+    document.addEventListener('langchange', () => {
+      applyText();
+      populateCats();
+      render();
+    });
+
+    initI18n();
+    applyText();
+
+    load();
+  </script>
+</body>
+</html>

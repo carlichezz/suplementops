@@ -1,0 +1,13 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "catalogo-suplementos",
+	"compatibility_date": "2025-06-01",
+	"pages_build_output_dir": "./public",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "catalogo-db",
+			"database_id": "4c33e9e9-5b58-4dcd-a85d-0d669e5d658c"
+		}
+	]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "catalogo-suplementos",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler pages dev ./public",
+    "deploy": "wrangler pages deploy ./public",
+    "db:create": "wrangler d1 create catalogo-db",
+    "db:migrate": "wrangler d1 migrations apply catalogo-db --remote",
+    "db:migrate:local": "wrangler d1 migrations apply catalogo-db --local"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
