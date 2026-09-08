@@ -1,0 +1,33 @@
+{
+  "name": "catalogo-suplementos",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:live": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "preview:live": "npm run build && vite preview",
+    "pages:dev": "npm run build && wrangler pages dev ./dist --d1 DB=4c33e9e9-5b58-4dcd-a85d-0d669e5d658c",
+    "pages:dev:remote": "npm run build && wrangler pages dev ./dist --d1 DB=4c33e9e9-5b58-4dcd-a85d-0d669e5d658c --remote",
+    "deploy": "npm run build && wrangler pages deploy ./dist",
+    "db:create": "wrangler d1 create catalogo-db",
+    "db:migrate": "wrangler d1 migrations apply catalogo-db --remote",
+    "db:migrate:local": "wrangler d1 migrations apply catalogo-db --local"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.5.5",
+    "daisyui": "^5.7.28",
+    "tailwindcss": "^4.3.3",
+    "vite": "^5.4.11",
+    "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3"
+  }
+}

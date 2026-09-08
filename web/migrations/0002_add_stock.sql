@@ -1,0 +1,6 @@
+-- Añadir columna stock (cantidad en existencia) a productos
+-- NOTA: la columna stock ya está definida en 0001_init.sql (CREATE TABLE productos),
+-- por lo que esta ALTER es redundante y falla en bases creadas desde cero
+-- (duplicate column name: stock). Se elimina el comando y queda como no-op.
+-- En la base remota esta migración ya está registrada como aplicada, así que
+-- el esquema final es el mismo (stock existe de todas formas).
