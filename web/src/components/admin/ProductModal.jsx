@@ -49,6 +49,7 @@ function cartesian(gruposRaw) {
     nombre: Object.values(atributos).join(' · '),
     precio: '',
     stock: '',
+    imagen: '',
   }));
 }
 
@@ -108,6 +109,7 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
           atributos: { ...(v.atributos || {}) },
           precio: v.precio || '',
           stock: v.stock != null ? v.stock : '',
+          imagen: v.imagen || '',
         }))
       );
     } else {
@@ -165,6 +167,22 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
     setVariantes(n);
   };
 
+  const uploadVarianteImg = async (i) => {
+    setUploadingIdx(`v${i}`);
+    try {
+      const url = await uploadImage();
+      if (url) {
+        const n = [...variantes];
+        n[i] = { ...n[i], imagen: url };
+        setVariantes(n);
+      }
+    } catch (e) {
+      onShowAlert(t('pm.alert.upload', { err: (e && e.message) || e }), 'error');
+    } finally {
+      setUploadingIdx(null);
+    }
+  };
+
   const removeVariante = (i) => setVariantes((prev) => prev.filter((_, j) => j !== i));
 
   const onSubmit = async (e) => {
@@ -176,6 +194,7 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
       atributos: v.atributos || {},
       precio: v.precio ? String(v.precio).trim() : null,
       stock: v.stock !== '' && v.stock != null ? parseInt(v.stock, 10) : null,
+      imagen: (v.imagen || '').trim() || null,
     }));
     const data = {
       titulo: form.titulo,
@@ -278,6 +297,7 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
                   <span>{t('pm.vars.combo')}</span>
                   <span>{t('pm.price')}</span>
                   <span>{t('pm.stock')}</span>
+                  <span>{t('pm.vars.image')}</span>
                   <span />
                 </div>
                 {variantes.map((v, i) => (
@@ -285,6 +305,13 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
                     <span className="vars-combo-name">{v.nombre}</span>
                     <input className="input rel-1" name="precio" placeholder="base" value={v.precio} onChange={setVariante(i)} />
                     <input className="input rel-1" name="stock" placeholder="base" value={v.stock} onChange={setVariante(i)} />
+                    <div className="vars-img">
+                      {v.imagen ? <img src={v.imagen} alt="" className="vars-img-thumb" /> : null}
+                      <button type="button" className="btn btn-xs btn-ghost" disabled={uploadingIdx === `v${i}`} onClick={() => uploadVarianteImg(i)}>
+                        {uploadingIdx === `v${i}` ? t('pm.uploading') : v.imagen ? t('pm.vars.change') : t('pm.vars.add.img')}
+                      </button>
+                      {v.imagen ? <button type="button" className="btn btn-xs btn-ghost text-error" onClick={() => setVariante(i)({ target: { name: 'imagen', value: '' } })}>×</button> : null}
+                    </div>
                     <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeVariante(i)}>×</button>
                   </div>
                 ))}

@@ -1,4 +1,5 @@
 import { requireAdmin } from '../_auth.js';
+import { loadVariaciones, replaceVariaciones } from '../_variaciones.js';
 
 export const onRequestGet = async (context) => {
   const { env, params } = context;
@@ -16,20 +17,9 @@ export const onRequestGet = async (context) => {
     return Response.json({ error: 'Producto no encontrado' }, { status: 404 });
   }
 
-  const { results: vars } = await env.DB.prepare(
-    'SELECT * FROM variaciones WHERE producto_id = ? ORDER BY pos ASC'
-  )
-    .bind(id)
-    .all();
+  const vars = await loadVariaciones(env, [id]);
   result.atributos = result.atributos ? JSON.parse(result.atributos) : [];
-  result.variaciones = (vars || []).map((v) => ({
-    id: v.id,
-    nombre: v.nombre,
-    atributos: v.atributos ? JSON.parse(v.atributos) : {},
-    precio: v.precio,
-    stock: v.stock,
-    pos: v.pos,
-  }));
+  result.variaciones = vars.map(({ producto_id, ...rest }) => rest);
 
   return Response.json(result);
 };
@@ -80,18 +70,7 @@ export const onRequestPut = async (context) => {
   }
 
   if (variaciones !== undefined) {
-    await env.DB.prepare('DELETE FROM variaciones WHERE producto_id = ?').bind(id).run();
-    const rows = (variaciones || [])
-      .map((v, i) => [String(v.nombre || '').trim(), v.atributos, v.precio ?? null, v.stock ?? null, i])
-      .filter((r) => r[0]);
-    for (const [nombre, atributos, precio, stock, pos] of rows) {
-      await env.DB.prepare(
-        `INSERT INTO variaciones (producto_id, nombre, atributos, precio, stock, pos)
-         VALUES (?, ?, ?, ?, ?, ?)`
-      )
-        .bind(id, nombre, JSON.stringify(atributos || {}), precio, stock, pos)
-        .run();
-    }
+    await replaceVariaciones(env, id, variaciones);
   }
 
   return Response.json({ ok: true });

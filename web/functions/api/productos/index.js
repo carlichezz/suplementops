@@ -1,4 +1,5 @@
 import { requireAdmin } from '../_auth.js';
+import { loadVariaciones, replaceVariaciones } from '../_variaciones.js';
 
 export const onRequestGet = async (context) => {
   const { env } = context;
@@ -11,10 +12,7 @@ export const onRequestGet = async (context) => {
 
   if (results.length > 0) {
     const ids = results.map((p) => p.id);
-    const placeholders = ids.map(() => '?').join(',');
-    const { results: vars } = await env.DB.prepare(
-      `SELECT v.* FROM variaciones v WHERE v.producto_id IN (${placeholders}) ORDER BY v.producto_id, v.pos ASC`
-    ).bind(...ids).all();
+    const vars = await loadVariaciones(env, ids);
     const byProduct = new Map();
     for (const v of vars) {
       if (!byProduct.has(v.producto_id)) byProduct.set(v.producto_id, []);
@@ -22,14 +20,7 @@ export const onRequestGet = async (context) => {
     }
     for (const p of results) {
       p.atributos = p.atributos ? JSON.parse(p.atributos) : [];
-      p.variaciones = (byProduct.get(p.id) || []).map((v) => ({
-        id: v.id,
-        nombre: v.nombre,
-        atributos: v.atributos ? JSON.parse(v.atributos) : {},
-        precio: v.precio,
-        stock: v.stock,
-        pos: v.pos,
-      }));
+      p.variaciones = byProduct.get(p.id) || [];
     }
   }
 
@@ -79,18 +70,3 @@ export const onRequestPost = async (context) => {
 
   return Response.json({ ok: true }, { status: 201 });
 };
-
-async function replaceVariaciones(env, productoId, variaciones) {
-  if (!variaciones || !Array.isArray(variaciones)) return;
-  const rows = variaciones
-    .map((v, i) => [String(v.nombre || '').trim(), v.atributos, v.precio ?? null, v.stock ?? null, i])
-    .filter((r) => r[0]);
-  for (const [nombre, atributos, precio, stock, pos] of rows) {
-    await env.DB.prepare(
-      `INSERT INTO variaciones (producto_id, nombre, atributos, precio, stock, pos)
-       VALUES (?, ?, ?, ?, ?, ?)`
-    )
-      .bind(productoId, nombre, JSON.stringify(atributos || {}), precio, stock, pos)
-      .run();
-  }
-}

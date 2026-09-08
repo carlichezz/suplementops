@@ -113,6 +113,17 @@ export const api = {
     clearCache(CACHE_KEYS.productos);
     return r.json();
   },
+  variaciones: {
+    async save(id, atributos, variaciones) {
+      const r = await fetch(`${API}/${id}/variaciones`, {
+        method: 'PUT',
+        headers: adminHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ atributos, variaciones }),
+      });
+      clearCache(CACHE_KEYS.productos);
+      return r.json();
+    },
+  },
   categorias: {
     async list() {
       return cachedFetch(CACHE_KEYS.categorias, () => fetchJson('/api/categorias').then((r) => r.json()));

@@ -121,7 +121,7 @@ export default function CheckoutPage() {
           titulo: tr(p).titulo,
           precio: variantPrice(p, item.variante_id),
           cantidad: item.cantidad,
-          imagen_url: p.imagen_url,
+          imagen_url: (v && v.imagen) || p.imagen_url,
           variante_id: item.variante_id || null,
           variante_nombre: v ? v.nombre : null,
         };

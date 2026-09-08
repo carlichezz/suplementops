@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
-import { isSoldOut, stockOf } from '../lib/format';
+import { isSoldOut, stockOf, variantGroups } from '../lib/format';
 import StockTag from './StockTag';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
 
@@ -13,7 +13,7 @@ export default function ProductCard({ p, showDesc = true, showActions = true }) 
   const tp = tr(p);
   const soldOut = isSoldOut(p);
   const stock = stockOf(p);
-  const hasVars = Array.isArray(p.atributos) && p.atributos.length > 0;
+  const hasVars = variantGroups(p).length > 0;
 
   const handleAdd = (e) => {
     if (hasVars) {

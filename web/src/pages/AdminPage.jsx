@@ -5,14 +5,17 @@ import Footer from '../components/Footer';
 import StockTag from '../components/StockTag';
 import ProductModal from '../components/admin/ProductModal';
 import OrderModal from '../components/admin/OrderModal';
+import VariantManager from '../components/admin/VariantManager';
 import { AdminListSkeleton } from '../components/admin/AdminSkeleton';
 import { api, adminSessionValid, estadoColor } from '../lib/api';
 import { useLang } from '../lib/i18n';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
+import { variantGroups } from '../lib/format';
 
 const TABS = [
   { key: 'productos', i18n: 'admin.tab.productos' },
   { key: 'categorias', i18n: 'admin.tab.categorias' },
+  { key: 'variaciones', i18n: 'admin.tab.variaciones' },
   { key: 'ordenes', i18n: 'admin.tab.ordenes' },
   { key: 'notificaciones', i18n: 'admin.tab.notificaciones' },
 ];
@@ -103,6 +106,7 @@ export default function AdminPage() {
 
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [catModalOpen, setCatModalOpen] = useState(false);
+  const [variacionesModal, setVariacionesModal] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [orderModal, setOrderModal] = useState(null);
   const catDialogRef = useRef(null);
@@ -183,6 +187,7 @@ export default function AdminPage() {
     if (!authed) return;
     if (tab === 'productos') load();
     else if (tab === 'categorias') loadCategorias();
+    else if (tab === 'variaciones') load();
     else if (tab === 'ordenes') loadOrdenes(filtroOrden);
     else if (tab === 'notificaciones') loadChatIds();
   }, [authed, tab]);
@@ -493,7 +498,48 @@ export default function AdminPage() {
                   {t('admin.add.product')}
                 </button>
               ) : null}
-              {tab === 'ordenes' ? (
+              {tab === 'variaciones' ? (
+                <button className="btn btn-secondary btn-sm" onClick={() => { setEditingProduct(null); setVariacionesModal({ type: 'pick' }); }}>
+                  {t('admin.vm.edit.product')}
+                </button>
+              ) : null}
+            {tab === 'variaciones' ? (
+              <div className="tab-panel active">
+                {loadingTab && allProducts.length === 0 ? (
+                  <AdminListSkeleton variant="productos" rows={6} />
+                ) : allProducts.length === 0 ? (
+                  <div className="empty">{t('admin.no.products')}</div>
+                ) : (
+                  <div className="cat-list">
+                    {allProducts.map((p) => {
+                      const gs = variantGroups(p);
+                      return (
+                        <div className="cat-row" key={p.id} onClick={() => setVariacionesModal({ type: 'edit', id: p.id, product: p })}>
+                          <div className="vm-avatar">
+                            {p.imagen_url ? <img loading="lazy" src={sdUrl(p.imagen_url, 100)} alt="" onError={(e) => onImgFallback(e, p.imagen_url)} /> : null}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="cat-name">{p.titulo}</div>
+                            <div className="cat-count">
+                              {gs.length > 0
+                                ? gs.map((g) => g.nombre).join(' · ')
+                                : t('vm.no.groups')} · {Array.isArray(p.variaciones) ? p.variaciones.length : 0} {t('vm.variants')}
+                            </div>
+                          </div>
+                          <div className="cat-actions">
+                            <button className="btn btn-secondary btn-sm" onClick={(ev) => { ev.stopPropagation(); setVariacionesModal({ type: 'edit', id: p.id, product: p }); }}>
+                              {t('admin.edit')}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            {tab === 'ordenes' ? (
                 <div className="flex items-center gap-2 flex-wrap">
                   <select
                     className="select select-sm shrink-0 min-w-[7rem] w-auto"
@@ -671,6 +717,39 @@ export default function AdminPage() {
               onShowAlert={showAlert}
               onSaved={load}
             />
+            {variacionesModal ? (
+              <dialog
+                className="modal"
+                open
+                onCancel={(ev) => { ev.preventDefault(); setVariacionesModal(null); }}
+                onClick={(ev) => { if (ev.target === ev.currentTarget) setVariacionesModal(null); }}
+              >
+                <div className="modal-box modal-card modal-card-wide" style={{ maxWidth: 760 }}>
+                  <h2>{t('vm.title')}</h2>
+                  {variacionesModal.type === 'pick' ? (
+                    <div className="cat-list">
+                      {allProducts.map((p) => (
+                        <div className="cat-row" key={p.id} onClick={() => { const prod = allProducts.find((x) => x.id === p.id); setVariacionesModal({ type: 'edit', id: p.id, product: prod }); }}>
+                          <div>
+                            <div className="cat-name">{p.titulo}</div>
+                            <div className="cat-count">{variantGroups(p).length} {t('vm.groups')} · {Array.isArray(p.variaciones) ? p.variaciones.length : 0} {t('vm.variants')}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <VariantManager
+                      product={variacionesModal.product || allProducts.find((x) => String(x.id) === String(variacionesModal.id)) || {}}
+                      onDone={() => { setVariacionesModal(null); load(); }}
+                      showAlert={showAlert}
+                    />
+                  )}
+                  <div className="modal-actions">
+                    <button type="button" className="btn btn-ghost" onClick={() => setVariacionesModal(null)}>{t('pm.cancel')}</button>
+                  </div>
+                </div>
+              </dialog>
+            ) : null}
             <OrderModal
               order={orderModal}
               orders={ordenes}

@@ -34,3 +34,19 @@ export function variantStock(p, varianteId) {
 export function lineKey(id, varianteId) {
   return varianteId ? `${id}:${varianteId}` : String(id);
 }
+
+export function variantGroups(p) {
+  const vs = Array.isArray(p && p.variaciones) ? p.variaciones : [];
+  const map = new Map();
+  for (const v of vs) {
+    const a = v.atributos || {};
+    for (const k of Object.keys(a)) {
+      const val = String(a[k] ?? '').trim();
+      if (!val) continue;
+      if (!map.has(k)) map.set(k, []);
+      const arr = map.get(k);
+      if (!arr.includes(val)) arr.push(val);
+    }
+  }
+  return [...map.entries()].map(([nombre, opciones]) => ({ nombre, opciones }));
+}

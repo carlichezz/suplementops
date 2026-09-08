@@ -207,7 +207,7 @@ export default function OrderModal({
         </div>
 
         <div className="divider my-2" style={{ color: 'var(--muted)' }}>{t('om.client')}</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 gap-x-6">
+        <div className="field-float-row">
           <ReadField label={t('om.client')} value={order.nombre} />
           <ReadField label={t('om.phone')} value={order.telefono} />
         </div>

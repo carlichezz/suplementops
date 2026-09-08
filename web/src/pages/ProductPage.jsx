@@ -9,12 +9,13 @@ import Lightbox from '../components/Lightbox';
 import { api } from '../lib/api';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
-import { isSoldOut, stockOf, variantPrice, variantStock, variantOf } from '../lib/format';
+import { isSoldOut, stockOf, variantPrice, variantStock, variantOf, variantGroups } from '../lib/format';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
 
-function galleryImages(p) {
+function galleryImages(p, selectedVariant) {
   const imgs = [];
   if (!p) return imgs;
+  if (selectedVariant && selectedVariant.imagen) imgs.push(selectedVariant.imagen);
   if (p.imagen_url) imgs.push(p.imagen_url);
   if (p.imagenes_extra) {
     String(p.imagenes_extra)
@@ -67,9 +68,9 @@ export default function ProductPage() {
   const trackDrag = useRef(null);
 
   // Elegir la primera opción de cada grupo por defecto
-  const preselect = (p) => {
+  const preselect = (groups) => {
     const out = {};
-    (p && Array.isArray(p.atributos) ? p.atributos : []).forEach((g) => {
+    (Array.isArray(groups) ? groups : []).forEach((g) => {
       if (Array.isArray(g.opciones) && g.opciones.length) out[g.nombre] = g.opciones[0];
     });
     return out;
@@ -137,13 +138,17 @@ export default function ProductPage() {
         setAll(data);
         setCurrent(found);
         setActiveIdx(0);
-        setSel(preselect(found));
+        const groups = variantGroups(found);
+        setSel(preselect(groups));
         setStatus('loaded');
       })
       .catch(() => setStatus('error'));
   }, [id]);
 
-  const imgs = useMemo(() => galleryImages(current), [current]);
+  const imgs = useMemo(
+    () => galleryImages(current, matchVariant(current, sel)),
+    [current, sel]
+  );
   const related = useMemo(
     () => (current ? findRelated(tr(current), all.map((x) => tr(x)), 4) : []),
     [current, all, lang]
@@ -173,7 +178,7 @@ export default function ProductPage() {
 
   const p = current;
   const tp = tr(p);
-  const groups = Array.isArray(p.atributos) ? p.atributos : [];
+  const groups = variantGroups(p);
   const hasGroups = groups.length > 0;
   const selectedVariant = matchVariant(p, sel);
   const displayPrice = hasGroups ? variantPrice(p, selectedVariant && selectedVariant.id) : p.precio;

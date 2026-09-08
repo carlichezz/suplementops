@@ -89,16 +89,17 @@ export default function CartUI({ catalog = [] }) {
                   if (!p) return null;
                   const tp = tr(p);
                   const v = variantOf(p, item.variante_id);
+                  const thumb = (v && v.imagen) || p.imagen_url;
                   const subtotal = priceNum(variantPrice(p, item.variante_id)) * item.cantidad;
                   return (
                     <div className="cart-item" key={`${p.id}:${item.variante_id || ''}`}>
                       <Link className="cart-thumb" to={`/product/${p.id}`}>
-                        {p.imagen_url ? (
+                        {thumb ? (
                           <img
-                            src={sdUrl(p.imagen_url, 200)}
+                            src={sdUrl(thumb, 200)}
                             alt=""
                             loading="lazy"
-                            onError={(e) => onImgFallback(e, p.imagen_url)}
+                            onError={(e) => onImgFallback(e, thumb)}
                           />
                         ) : null}
                       </Link>
