@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import StockTag from '../components/StockTag';
 import ProductModal from '../components/admin/ProductModal';
 import OrderModal from '../components/admin/OrderModal';
+import { AdminListSkeleton } from '../components/admin/AdminSkeleton';
 import { api, adminSessionValid, estadoColor } from '../lib/api';
 import { useLang } from '../lib/i18n';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
@@ -91,6 +92,7 @@ export default function AdminPage() {
   const [ordenes, setOrdenes] = useState([]);
   const [chatids, setChatids] = useState([]);
   const [filtroOrden, setFiltroOrden] = useState('');
+  const [loadingTab, setLoadingTab] = useState(true);
   const [alert, setAlert] = useState(null);
   const alertTimer = useRef(null);
 
@@ -131,37 +133,49 @@ export default function AdminPage() {
   };
 
   const load = async () => {
+    setLoadingTab(true);
     try {
       const [prods, cats] = await Promise.all([api.list(), api.categorias.list()]);
       setAllProducts(prods);
       setAllCategorias(cats);
     } catch {
       showAlert(t('admin.alert.load'), 'error');
+    } finally {
+      setLoadingTab(false);
     }
   };
 
   const loadCategorias = async () => {
+    setLoadingTab(true);
     try {
       setAllCategorias(await api.categorias.list());
     } catch {
       showAlert(t('admin.alert.load.cats'), 'error');
+    } finally {
+      setLoadingTab(false);
     }
   };
 
   const loadOrdenes = async (estado) => {
     setFiltroOrden(estado);
+    setLoadingTab(true);
     try {
       setOrdenes(await api.ordenes.list(estado));
     } catch {
       showAlert(t('admin.alert.load.orders'), 'error');
+    } finally {
+      setLoadingTab(false);
     }
   };
 
   const loadChatIds = async () => {
+    setLoadingTab(true);
     try {
       setChatids(await api.chatids.list());
     } catch {
       showAlert(t('admin.alert.load.chat'), 'error');
+    } finally {
+      setLoadingTab(false);
     }
   };
 
@@ -512,7 +526,9 @@ export default function AdminPage() {
             {tab === 'productos' ? (
               <div className="tab-panel active">
                 <div className="grid admin-grid">
-                  {allProducts.length === 0 ? (
+                  {loadingTab && allProducts.length === 0 ? (
+                    <AdminListSkeleton variant="productos" rows={6} />
+                  ) : allProducts.length === 0 ? (
                     <div className="empty">{t('admin.no.products')}</div>
                   ) : (
                     allProducts.map((p) => (
@@ -545,7 +561,9 @@ export default function AdminPage() {
             {tab === 'categorias' ? (
               <div className="tab-panel active">
                 <div className="cat-list">
-                  {allCategorias.length === 0 ? (
+                  {loadingTab && allCategorias.length === 0 ? (
+                    <AdminListSkeleton variant="categorias" rows={4} />
+                  ) : allCategorias.length === 0 ? (
                     <div className="empty">{t('admin.no.cats')}</div>
                   ) : (
                     allCategorias.map((c) => (
@@ -567,7 +585,9 @@ export default function AdminPage() {
 
             {tab === 'ordenes' ? (
               <div className="tab-panel active">
-                {ordenes.length === 0 ? (
+                {loadingTab && ordenes.length === 0 ? (
+                  <AdminListSkeleton variant="ordenes" rows={4} />
+                ) : ordenes.length === 0 ? (
                   <div className="empty">{t('admin.no.orders')}</div>
                 ) : (
                   ordenes.map((o) => (
@@ -619,7 +639,9 @@ export default function AdminPage() {
                   <button type="submit" className="btn btn-secondary btn-sm">{t('admin.add')}</button>
                 </form>
                 <div className="cat-list">
-                  {chatids.length === 0 ? (
+                  {loadingTab && chatids.length === 0 ? (
+                    <AdminListSkeleton variant="notificaciones" rows={3} />
+                  ) : chatids.length === 0 ? (
                     <div className="empty">{t('admin.no.chat')}</div>
                   ) : (
                     chatids.map((c) => (

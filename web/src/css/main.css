@@ -1049,6 +1049,27 @@ body {
   color: var(--accent);
 }
 
+/* Campos de solo lectura (modal de órdenes): mismo look, sin interacción */
+.field-float > .input[disabled],
+.field-float > .input[readonly],
+.field-float > .textarea[disabled],
+.field-float > .textarea[readonly] {
+  opacity: 1;
+  cursor: default;
+  background-color: var(--color-base-100);
+  color: var(--text);
+  -webkit-text-fill-color: var(--text);
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+.field-float > .input[disabled]:focus + label,
+.field-float > .input[readonly]:focus + label,
+.field-float > .textarea[disabled]:focus + label,
+.field-float > .textarea[readonly]:focus + label {
+  color: var(--accent);
+}
+
 .field-check .check-row {
   display: flex;
   align-items: center;

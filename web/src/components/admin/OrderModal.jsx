@@ -31,6 +31,25 @@ function parseItems(raw) {
   return Array.isArray(arr) ? arr : [];
 }
 
+// Campo de solo lectura con el mismo estilo de inputs flotantes
+function ReadField({ label, value, textarea = false }) {
+  const common = {
+    className: textarea ? 'textarea w-full' : 'input w-full',
+    value: value ?? '',
+    readOnly: true,
+    disabled: true,
+    placeholder: ' ',
+    tabIndex: -1,
+    'aria-label': label,
+  };
+  return (
+    <div className="field-float">
+      {textarea ? <textarea {...common} /> : <input type="text" {...common} />}
+      <label>{label}</label>
+    </div>
+  );
+}
+
 export default function OrderModal({
   order,
   orders = [],
@@ -188,25 +207,16 @@ export default function OrderModal({
         </div>
 
         <div className="divider my-2" style={{ color: 'var(--muted)' }}>{t('om.client')}</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-          <div className="field">
-            <label>{t('om.client')}</label>
-            <div className="od-value"><b>{order.nombre || '—'}</b></div>
-          </div>
-          <div className="field">
-            <label>{t('om.phone')}</label>
-            <div className="od-value">
-              {order.telefono || '—'}
-              {order.telefono_alt ? <><br /><span className="od-muted">Alt: {order.telefono_alt}</span></> : null}
-            </div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 gap-x-6">
+          <ReadField label={t('om.client')} value={order.nombre} />
+          <ReadField label={t('om.phone')} value={order.telefono} />
         </div>
+        {order.telefono_alt ? (
+          <ReadField label={t('om.phone_alt')} value={order.telefono_alt} />
+        ) : null}
 
         <div className="divider my-2" style={{ color: 'var(--muted)' }}>{t('om.address')}</div>
-        <div className="field">
-          <label>{t('om.address')}</label>
-          <div className="od-value">{order.direccion || '—'}</div>
-        </div>
+        <ReadField label={t('om.address')} value={order.direccion} textarea />
         {mapsUrl ? (
           <div className="flex items-center gap-2 flex-wrap mb-3">
             <a className="btn btn-secondary btn-sm" href={mapsUrl} target="_blank" rel="noopener">
@@ -215,10 +225,7 @@ export default function OrderModal({
           </div>
         ) : null}
         {order.nota ? (
-          <div className="field">
-            <label>{t('om.nota')}</label>
-            <div className="od-value">{order.nota}</div>
-          </div>
+          <ReadField label={t('om.nota')} value={order.nota} textarea />
         ) : null}
 
         <div className="divider my-2" style={{ color: 'var(--muted)' }}>{t('om.products')} ({items.length})</div>

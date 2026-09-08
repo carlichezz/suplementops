@@ -18,14 +18,7 @@ export default function Header({ showSearch = false, searchValue = '', onSearchC
           <span className="sm:inline">Suplemen<strong>TOPS</strong></span>
           {admin ? <span className="brand-admin">admin</span> : null}
         </Link>
-        {admin && onLogout ? (
-          <button type="button" className="btn btn-ghost btn-sm text-white/90 flex items-center gap-1.5" onClick={onLogout} title={t('admin.logout')}>
-            <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M16 17v-3H9v-4h7V7l5 5-5 5zM14 2a2 2 0 0 1 2 2v5h-2V4H4v16h10v-5h2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10z" />
-            </svg>
-            <span className="hidden sm:inline">{t('admin.logout')}</span>
-          </button>
-        ) : null}
+
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           {showSearch ? (
             <input
@@ -38,6 +31,14 @@ export default function Header({ showSearch = false, searchValue = '', onSearchC
           ) : null}
 
           <div className="flex items-center gap-1 shrink-0">
+                    {admin && onLogout ? (
+          <button type="button" className="btn btn-ghost btn-sm text-white/90 flex items-center gap-1.5" onClick={onLogout}>
+            <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M16 17v-3H9v-4h7V7l5 5-5 5zM14 2a2 2 0 0 1 2 2v5h-2V4H4v16h10v-5h2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10z" />
+            </svg>
+            <span className="hidden sm:inline">{t('admin.logout')}</span>
+          </button>
+        ) : null}
             <label className="swap swap-rotate btn btn-ghost btn-circle text-white" aria-label={t('cart.theme')}>
               <input type="checkbox" checked={dark} onChange={(e) => setDark(e.target.checked)} />
               <svg className="swap-off h-6 w-6 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
