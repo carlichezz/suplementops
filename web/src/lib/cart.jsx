@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { priceNum } from './format';
+import { priceNum, variantPrice, variantStock, lineKey } from './format';
 
 const KEY = 'carrito_suplementos';
 
@@ -12,6 +12,17 @@ function loadItems() {
   } catch {
     return [];
   }
+}
+
+function mergeLine(list, item) {
+  const k = lineKey(item.id, item.variante_id);
+  const idx = list.findIndex((i) => lineKey(i.id, i.variante_id) === k);
+  if (idx >= 0) {
+    const copy = list.slice();
+    copy[idx] = { ...copy[idx], cantidad: copy[idx].cantidad + item.cantidad };
+    return copy;
+  }
+  return [...list, item];
 }
 
 export function CartProvider({ children }) {
@@ -38,25 +49,30 @@ export function CartProvider({ children }) {
       getTotal: (catalog) =>
         items.reduce((sum, item) => {
           const p = catalog?.find((x) => x.id == item.id);
-          const price = priceNum(p && p.precio);
+          const price = priceNum(variantPrice(p, item.variante_id));
           return sum + price * item.cantidad;
         }, 0),
-      qtyOf: (id) => items.find((i) => i.id == id)?.cantidad || 0,
-      add: (id, qty = 1, stock = null) =>
+      qtyOf: (id, varianteId) =>
+        items.find((i) => lineKey(i.id, i.variante_id) === lineKey(id, varianteId))?.cantidad || 0,
+      add: (id, qty = 1, stock = null, varianteId = null) =>
         setItems((prev) => {
-          const ex = prev.find((i) => i.id == id);
+          const k = lineKey(id, varianteId);
+          const ex = prev.find((i) => lineKey(i.id, i.variante_id) === k);
           const max = stock != null ? stock : 99;
           const current = ex ? ex.cantidad : 0;
           const next = Math.min(Math.max(1, qty), Math.max(0, max - current));
           if (next <= 0) return prev;
-          if (ex) return prev.map((i) => (i.id == id ? { ...i, cantidad: i.cantidad + next } : i));
-          return [...prev, { id, cantidad: next }];
+          if (ex) return mergeLine(prev, { id, variante_id: varianteId ? Number(varianteId) : null, cantidad: next });
+          return [...prev, { id: Number(id), variante_id: varianteId ? Number(varianteId) : null, cantidad: next }];
         }),
-      remove: (id) => setItems((prev) => prev.filter((i) => i.id != id)),
-      setQty: (id, qty, stock = null) =>
+      remove: (id, varianteId) => setItems((prev) => prev.filter((i) => lineKey(i.id, i.variante_id) !== lineKey(id, varianteId))),
+      setQty: (id, qty, stock = null, varianteId = null) =>
         setItems((prev) => {
+          const k = lineKey(id, varianteId);
           const max = stock != null ? stock : 99;
-          return prev.map((i) => (i.id == id ? { ...i, cantidad: Math.min(Math.max(1, qty), max) } : i));
+          return prev.map((i) =>
+            lineKey(i.id, i.variante_id) === k ? { ...i, cantidad: Math.min(Math.max(1, qty), max) } : i
+          );
         }),
       clear: () => setItems([]),
       panelOpen,

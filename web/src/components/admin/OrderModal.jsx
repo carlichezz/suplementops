@@ -147,7 +147,7 @@ export default function OrderModal({
   const addSelected = () => {
     const p = catalog.find((c) => String(c.id) === String(addSel));
     if (!p) return;
-    setItems((prev) => [...prev, { id: p.id, titulo: p.titulo, precio: p.precio, cantidad: 1, imagen_url: p.imagen_url || null }]);
+    setItems((prev) => [...prev, { id: p.id, titulo: p.titulo, precio: p.precio, cantidad: 1, imagen_url: p.imagen_url || null, variante_id: null, variante_nombre: null }]);
     setAddSel('');
   };
 
@@ -230,7 +230,10 @@ export default function OrderModal({
               <div className="od-item" key={i.id != null ? i.id : idx}>
                 {i.imagen_url ? <img src={sdUrl(i.imagen_url, 200)} alt="" onError={(e) => onImgFallback(e, i.imagen_url)} /> : <span className="od-thumb-empty" />}
                 <div className="od-main">
-                  <div className="od-title">{i.titulo}</div>
+                  <div className="od-title">
+                    {i.titulo}
+                    {i.variante_nombre ? <span className="cl-variant"> · {i.variante_nombre}</span> : null}
+                  </div>
                   <div className="od-unit">{i.precio}</div>
                   <div className="om-qty-row">
                     <button type="button" className="btn btn-secondary btn-om-qs" onClick={() => changeQty(idx, -1)} disabled={Number(i.cantidad || 1) <= 1}>−</button>

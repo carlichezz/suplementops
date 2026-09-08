@@ -48,7 +48,7 @@ async function notifyTelegram(env, order, origin) {
           const qty = p.cantidad || 1;
           const price = String(p.precio || '').trim();
           const sub = moneyNum((parseFloat(String(p.precio || '0').replace(/[^0-9.]/g, '')) || 0) * qty);
-          return `${i + 1}. ${esc(p.titulo || 'Producto')} × ${qty}${price ? ` · ${esc(price)}` : ''}${sub ? ` = ${sub}` : ''}`;
+          return `${i + 1}. ${esc(p.titulo || 'Producto')}${p.variante_nombre ? ` (${esc(p.variante_nombre)})` : ''} × ${qty}${price ? ` · ${esc(price)}` : ''}${sub ? ` = ${sub}` : ''}`;
         })
         .join('\n')
     : '—';
@@ -119,19 +119,21 @@ export const onRequestPost = async (context) => {
     return Response.json({ error: 'El carrito está vacío' }, { status: 400 });
   }
 
-  // Consolidar cantidades por producto (por si el cliente repite líneas)
+  // Consolidar cantidades por producto+variante (por si el cliente repite líneas)
   const cantidades = new Map();
   for (const p of productos) {
     const id = Number(p.id);
+    const vid = p.variante_id != null ? Number(p.variante_id) : null;
     const cantidad = parseInt(p.cantidad, 10);
-    if (!Number.isFinite(id) || !Number.isInteger(cantidad) || cantidad < 1) {
+    if (!Number.isFinite(id) || (vid != null && !Number.isFinite(vid)) || !Number.isInteger(cantidad) || cantidad < 1) {
       return Response.json({ error: 'Cantidades inválidas en el pedido.' }, { status: 400 });
     }
-    cantidades.set(id, (cantidades.get(id) || 0) + cantidad);
+    const key = `${id}:${vid ?? ''}`;
+    cantidades.set(key, { id, vid, cantidad: (cantidades.get(key)?.cantidad ?? 0) + cantidad });
   }
 
   // Validar existencia, stock y precio real contra la base de datos
-  const ids = [...cantidades.keys()];
+  const ids = [...new Set([...cantidades.values()].map((c) => c.id))];
   const placeholders = ids.map(() => '?').join(',');
   const { results } = await env.DB.prepare(
     `SELECT id, titulo, precio, stock FROM productos WHERE id IN (${placeholders})`
@@ -139,10 +141,19 @@ export const onRequestPost = async (context) => {
     .bind(...ids)
     .all();
   const dbById = new Map(results.map((r) => [r.id, r]));
+  let varsById = null;
+  if (ids.length > 0) {
+    const { results: vres } = await env.DB.prepare(
+      `SELECT id, producto_id, nombre, precio, stock FROM variaciones WHERE producto_id IN (${placeholders})`
+    )
+      .bind(...ids)
+      .all();
+    varsById = new Map((vres || []).map((v) => [`${v.producto_id}:${v.id}`, v]));
+  }
 
   let totalNum = 0;
   const itemsFinal = [];
-  for (const [id, cantidad] of cantidades) {
+  for (const { id, vid, cantidad } of cantidades.values()) {
     const row = dbById.get(id);
     if (!row) {
       return Response.json(
@@ -150,21 +161,33 @@ export const onRequestPost = async (context) => {
         { status: 400 }
       );
     }
-    const stock = row.stock == null ? Infinity : Number(row.stock);
+    const v = vid != null ? (varsById.get(`${id}:${vid}`) || null) : null;
+    if (vid != null && !v) {
+      return Response.json({ error: 'Una variante del carrito ya no existe. Actualizá el catálogo.' }, { status: 400 });
+    }
+    const stock = v != null ? (v.stock == null ? Number(row.stock == null ? 0 : row.stock) : Number(v.stock)) : (row.stock == null ? Infinity : Number(row.stock));
     if (stock < cantidad) {
       return Response.json(
         {
-          error: `No hay suficiente stock de "${row.titulo}" (disponible: ${Math.max(0, stock)}).`,
+          error: `No hay suficiente stock de "${row.titulo}"${v ? ` (${v.nombre})` : ''} (disponible: ${Math.max(0, stock)}).`,
         },
         { status: 400 }
       );
     }
-    const precio = parseFloat(String(row.precio || '0').replace(/[^0-9.]/g, ''));
+    const precioSr = v != null && v.precio ? v.precio : row.precio;
+    const precio = parseFloat(String(precioSr || '0').replace(/[^0-9.]/g, ''));
     if (!Number.isFinite(precio) || precio < 0) {
       return Response.json({ error: 'Precio inválido en el catálogo.' }, { status: 500 });
     }
     totalNum += precio * cantidad;
-    itemsFinal.push({ id, titulo: row.titulo, precio: row.precio, cantidad });
+    itemsFinal.push({
+      id,
+      titulo: row.titulo,
+      precio: precioSr,
+      cantidad,
+      variante_id: vid,
+      variante_nombre: v ? v.nombre : null,
+    });
   }
 
   // El total SIEMPRE se recalcula en el servidor (se ignora el enviado por el cliente)

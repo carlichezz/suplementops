@@ -14,3 +14,23 @@ export function stockOf(p) {
 export function isSoldOut(p) {
   return stockOf(p) <= 0;
 }
+
+export function variantOf(p, varianteId) {
+  if (!p || !p.variaciones || !varianteId) return null;
+  return p.variaciones.find((v) => String(v.id) === String(varianteId)) || null;
+}
+
+export function variantPrice(p, varianteId) {
+  const v = variantOf(p, varianteId);
+  return v && v.precio ? String(v.precio) : (p ? p.precio : null);
+}
+
+export function variantStock(p, varianteId) {
+  const v = variantOf(p, varianteId);
+  const s = v && v.stock != null ? v.stock : (p ? p.stock : null);
+  return s == null ? 999 : Math.max(0, Number(s) || 0);
+}
+
+export function lineKey(id, varianteId) {
+  return varianteId ? `${id}:${varianteId}` : String(id);
+}

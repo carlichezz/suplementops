@@ -6,7 +6,7 @@ import { CheckIcon, PinIcon, CheckMiniIcon } from '../components/Icons';
 import { api, getLocation } from '../lib/api';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
-import { money } from '../lib/format';
+import { money, priceNum, variantPrice, variantOf } from '../lib/format';
 
 const DATOS_KEY = 'checkout_datos';
 
@@ -114,9 +114,17 @@ export default function CheckoutPage() {
     const productos = items
       .map((item) => {
         const p = catalog.find((x) => x.id == item.id);
-        return p
-          ? { id: p.id, titulo: tr(p).titulo, precio: p.precio, cantidad: item.cantidad, imagen_url: p.imagen_url }
-          : null;
+        if (!p) return null;
+        const v = variantOf(p, item.variante_id);
+        return {
+          id: p.id,
+          titulo: tr(p).titulo,
+          precio: variantPrice(p, item.variante_id),
+          cantidad: item.cantidad,
+          imagen_url: p.imagen_url,
+          variante_id: item.variante_id || null,
+          variante_nombre: v ? v.nombre : null,
+        };
       })
       .filter(Boolean);
 
@@ -181,11 +189,12 @@ export default function CheckoutPage() {
                     items.map((item) => {
                       const p = catalog.find((x) => x.id == item.id);
                       if (!p) return null;
-                      const price = parseFloat(String(p.precio || '').replace(/[^0-9.]/g, ''));
+                      const v = variantOf(p, item.variante_id);
+                      const price = parseFloat(String(variantPrice(p, item.variante_id) || '').replace(/[^0-9.]/g, ''));
                       const subtotal = isNaN(price) ? 0 : price * item.cantidad;
                       return (
-                        <div className="checkout-line" key={item.id}>
-                          <span className="cl-name">{tr(p).titulo} × {item.cantidad}</span>
+                        <div className="checkout-line" key={`${item.id}:${item.variante_id || ''}`}>
+                          <span className="cl-name">{tr(p).titulo} × {item.cantidad}{v && v.nombre ? <span className="cl-variant"> · {v.nombre}</span> : null}</span>
                           <span>{money(subtotal)}</span>
                         </div>
                       );

@@ -13,15 +13,24 @@ export default function ProductCard({ p, showDesc = true, showActions = true }) 
   const tp = tr(p);
   const soldOut = isSoldOut(p);
   const stock = stockOf(p);
+  const hasVars = Array.isArray(p.atributos) && p.atributos.length > 0;
 
   const handleAdd = (e) => {
+    if (hasVars) {
+      navigate(`/product/${p.id}`);
+      return;
+    }
     if (qtyOf(p.id) >= stock) return;
     add(p.id, 1, stock);
     flyToCart(e.clientX, e.clientY);
   };
 
   const handleBuy = () => {
-    add(p.id, 1);
+    if (hasVars) {
+      navigate(`/product/${p.id}`);
+      return;
+    }
+    add(p.id, 1, stock);
     navigate('/checkout');
   };
 
@@ -49,15 +58,16 @@ return (
           {p.categoria_nombre ? <span className="badge badge-secondary border-0 font-semibold px-2 py-1 text-xs whitespace-nowrap">{catName(p.categoria_nombre)}</span> : null}
         </div>
         <div className="price mt-auto text-[1.35rem] font-bold text-accent">{p.precio}</div>
+        {hasVars ? <div className="text-[0.75rem] text-accent font-semibold">{t('has.vars')}</div> : null}
         <StockTag p={p} />
       </div>
       {showActions ? (
         <div className="flex flex-col gap-2 px-3.5 pb-3.5">
-          <button className="btn btn-accent btn-sm w-full" disabled={soldOut || qtyOf(p.id) >= stock} onClick={handleAdd}>
-            {soldOut ? t('sold.out') : qtyOf(p.id) >= stock ? t('add.full') : t('add.cart')}
+          <button className="btn btn-accent btn-sm w-full" disabled={soldOut || (!hasVars && qtyOf(p.id) >= stock)} onClick={handleAdd}>
+            {soldOut ? t('sold.out') : hasVars ? t('choose.variant') : qtyOf(p.id) >= stock ? t('add.full') : t('add.cart')}
           </button>
           <button className="btn btn-secondary btn-sm w-full" disabled={soldOut} onClick={handleBuy}>
-            {t('buy.now')}
+            {hasVars ? t('choose.variant') : t('buy.now')}
           </button>
         </div>
       ) : null}

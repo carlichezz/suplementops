@@ -9,7 +9,7 @@ import Lightbox from '../components/Lightbox';
 import { api } from '../lib/api';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
-import { isSoldOut, stockOf } from '../lib/format';
+import { isSoldOut, stockOf, variantPrice, variantStock, variantOf } from '../lib/format';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
 
 function galleryImages(p) {
@@ -62,8 +62,30 @@ export default function ProductPage() {
   const [status, setStatus] = useState('loading');
   const [activeIdx, setActiveIdx] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+  const [sel, setSel] = useState({});
   const trackRef = useRef(null);
   const trackDrag = useRef(null);
+
+  // Elegir la primera opción de cada grupo por defecto
+  const preselect = (p) => {
+    const out = {};
+    (p && Array.isArray(p.atributos) ? p.atributos : []).forEach((g) => {
+      if (Array.isArray(g.opciones) && g.opciones.length) out[g.nombre] = g.opciones[0];
+    });
+    return out;
+  };
+
+  // Encontrar la variación que coincide con la selección actual
+  const matchVariant = (p, selection) => {
+    const vs = Array.isArray(p && p.variaciones) ? p.variaciones : [];
+    const keys = Object.keys(selection);
+    if (keys.length === 0 || vs.length === 0) return null;
+    const a = vs.find((v) => {
+      const va = v.atributos || {};
+      return keys.every((k) => va[k] === selection[k]);
+    });
+    return a || null;
+  };
 
   // Sincroniza activeIdx con el scroll horizontal del carrusel
   const onTrackScroll = () => {
@@ -115,6 +137,7 @@ export default function ProductPage() {
         setAll(data);
         setCurrent(found);
         setActiveIdx(0);
+        setSel(preselect(found));
         setStatus('loaded');
       })
       .catch(() => setStatus('error'));
@@ -150,20 +173,24 @@ export default function ProductPage() {
 
   const p = current;
   const tp = tr(p);
-  const soldOut = isSoldOut(p);
-  const stock = stockOf(p);
+  const groups = Array.isArray(p.atributos) ? p.atributos : [];
+  const hasGroups = groups.length > 0;
+  const selectedVariant = matchVariant(p, sel);
+  const displayPrice = hasGroups ? variantPrice(p, selectedVariant && selectedVariant.id) : p.precio;
+  const effStock = hasGroups ? variantStock(p, selectedVariant && selectedVariant.id) : stockOf(p);
+  const soldOut = hasGroups ? effStock <= 0 : isSoldOut(p);
 
   const handleAdd = (e) => {
-    if (qtyOf(p.id) >= stock) return;
-    add(p.id, 1, stock);
+    if (qtyOf(p.id, selectedVariant && selectedVariant.id) >= effStock) return;
+    add(p.id, 1, effStock, selectedVariant && selectedVariant.id);
     flyToCart(e.clientX, e.clientY);
   };
 
   const handleBuy = () => {
-    add(p.id, 1, stock);
+    if (qtyOf(p.id, selectedVariant && selectedVariant.id) >= effStock) return;
+    add(p.id, 1, effStock, selectedVariant && selectedVariant.id);
     navigate('/checkout');
-  };
-
+  }; 
   return (
     <>
       <Header />
@@ -226,20 +253,51 @@ export default function ProductPage() {
           </div>
           <div className="product-info">
             <h1 className="text-2xl font-bold mt-2">{tp.titulo}</h1>
-            <div className="product-price">{p.precio}</div>
+            <div className="product-price">{displayPrice}</div>
             <div className="product-meta flex items-center gap-2 flex-wrap">
               {p.categoria_nombre ? <span className="badge badge-secondary border-0 font-semibold px-2 py-1 text-xs whitespace-nowrap">{catName(p.categoria_nombre)}</span> : null}
             </div>
-            <StockTag p={p} />
+            <StockTag p={{ ...p, stock: effStock }} />
             {tp.descripcion && tp.descripcion !== tp.titulo ? <div className="product-desc">{tp.descripcion}</div> : null}
-            <div className="product-options">
-              <button className="btn btn-accent" disabled={soldOut} onClick={handleAdd}>
-                {soldOut ? t('sold.out') : t('add.cart')}
-              </button>
-              <button className="btn btn-secondary" disabled={soldOut} onClick={handleBuy}>
-                {t('buy.now')}
-              </button>
-            </div>
+            {hasGroups ? (
+              <div className="product-options">
+                {groups.map((g) => (
+                  <div className="var-group" key={g.nombre}>
+                    <span className="var-group-label">{g.nombre}</span>
+                    <div className="var-chips">
+                      {(g.opciones || []).map((op) => (
+                        <button
+                          type="button"
+                          key={op}
+                          className={`var-chip${sel[g.nombre] === op ? ' active' : ''}`}
+                          onClick={() => setSel((s) => ({ ...s, [g.nombre]: op }))}
+                        >
+                          {op}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {selectedVariant && selectedVariant.nombre ? (
+                  <div className="var-summary">{t('prod.variant', { name: selectedVariant.nombre })}</div>
+                ) : null}
+                <button className="btn btn-accent" disabled={soldOut} onClick={handleAdd}>
+                  {soldOut ? t('sold.out') : t('add.cart')}
+                </button>
+                <button className="btn btn-secondary" disabled={soldOut} onClick={handleBuy}>
+                  {t('buy.now')}
+                </button>
+              </div>
+            ) : (
+              <div className="product-options">
+                <button className="btn btn-accent" disabled={soldOut} onClick={handleAdd}>
+                  {soldOut ? t('sold.out') : t('add.cart')}
+                </button>
+                <button className="btn btn-secondary" disabled={soldOut} onClick={handleBuy}>
+                  {t('buy.now')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

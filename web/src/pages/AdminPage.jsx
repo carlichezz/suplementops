@@ -444,7 +444,7 @@ export default function AdminPage() {
 
   return (
     <>
-      <Header admin />
+      <Header admin onLogout={logout} />
       <main className="page">
         {alert ? <div className={`alert ${alert.type}`}>{alert.msg}</div> : null}
 
@@ -493,9 +493,6 @@ export default function AdminPage() {
                   </select>
                 </div>
               ) : null}
-              <button className="btn btn-ghost btn-sm bg-transparent text-base-content" onClick={logout}>
-                {t('admin.logout')}
-              </button>
             </div>
 
             <div className="toolbar mb-1 flex items-center gap-3">

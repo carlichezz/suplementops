@@ -11,10 +11,63 @@ const EMPTY_FORM = {
   publicado: 1,
 };
 
+const EMPTY_GRUPO = { nombre: '', opciones: '' };
+
+function comboKey(atributos) {
+  return Object.entries(atributos || {})
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([k, v]) => `${k}=${v}`)
+    .join(';');
+}
+
+function parseGrupos(grupos) {
+  return grupos
+    .map((g) => ({
+      nombre: (g.nombre || '').trim(),
+      opciones: String(g.opciones || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    }))
+    .filter((g) => g.nombre && g.opciones.length);
+}
+
+// Todas las combinaciones de opciones (producto cartesiano)
+function cartesian(gruposRaw) {
+  const groups = parseGrupos(gruposRaw);
+  if (!groups.length) return [];
+  let combos = [{}];
+  for (const g of groups) {
+    const next = [];
+    for (const combo of combos) {
+      for (const op of g.opciones) next.push({ ...combo, [g.nombre]: op });
+    }
+    combos = next;
+  }
+  return combos.map((atributos) => ({
+    atributos,
+    nombre: Object.values(atributos).join(' · '),
+    precio: '',
+    stock: '',
+  }));
+}
+
+function mergeWithDefaults(variantes, defaults) {
+  const byKey = new Map(variantes.map((v) => [comboKey(v.atributos), v]));
+  return defaults.map((d) => {
+    const ex = byKey.get(comboKey(d.atributos));
+    return ex
+      ? { ...ex, atributos: d.atributos, nombre: d.nombre }
+      : d;
+  });
+}
+
 export default function ProductModal({ open, product, categorias, onClose, onShowAlert, onSaved }) {
   const { t } = useLang();
   const [form, setForm] = useState(EMPTY_FORM);
   const [imgs, setImgs] = useState(['']);
+  const [grupos, setGrupos] = useState([{ ...EMPTY_GRUPO }]);
+  const [variantes, setVariantes] = useState([]);
   const [uploadingIdx, setUploadingIdx] = useState(null);
   const dialogRef = useRef(null);
 
@@ -44,9 +97,24 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
         stock: product.stock != null ? product.stock : '',
         publicado: product.publicado == null ? 1 : Number(product.publicado),
       });
+      const g = Array.isArray(product.atributos) && product.atributos.length
+        ? product.atributos.map((ag) => ({ nombre: ag.nombre, opciones: (ag.opciones || []).join(', ') }))
+        : [{ ...EMPTY_GRUPO }];
+      setGrupos(g);
+      setVariantes(
+        (Array.isArray(product.variaciones) ? product.variaciones : []).map((v) => ({
+          id: v.id,
+          nombre: v.nombre,
+          atributos: { ...(v.atributos || {}) },
+          precio: v.precio || '',
+          stock: v.stock != null ? v.stock : '',
+        }))
+      );
     } else {
       setForm(EMPTY_FORM);
       setImgs(['']);
+      setGrupos([{ ...EMPTY_GRUPO }]);
+      setVariantes([]);
     }
   }, [open, product]);
 
@@ -76,9 +144,39 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
     }
   };
 
+  const setGrupo = (i) => (e) => {
+    const n = [...grupos];
+    n[i] = { ...n[i], [e.target.name]: e.target.value };
+    setGrupos(n);
+  };
+
+  const addGrupo = () => setGrupos((prev) => [...prev, { ...EMPTY_GRUPO }]);
+
+  const removeGrupo = (i) => setGrupos((prev) => prev.filter((_, j) => j !== i));
+
+  const regenerate = () => {
+    const defaults = cartesian(grupos);
+    setVariantes(defaults.length ? mergeWithDefaults(variantes, defaults) : []);
+  };
+
+  const setVariante = (i) => (e) => {
+    const n = [...variantes];
+    n[i] = { ...n[i], [e.target.name]: e.target.value };
+    setVariantes(n);
+  };
+
+  const removeVariante = (i) => setVariantes((prev) => prev.filter((_, j) => j !== i));
+
   const onSubmit = async (e) => {
     e.preventDefault();
     const id = product && product.id;
+    const attrGroups = parseGrupos(grupos);
+    const finalVariantes = variantes.map((v) => ({
+      nombre: v.nombre || Object.values(v.atributos || {}).join(' · '),
+      atributos: v.atributos || {},
+      precio: v.precio ? String(v.precio).trim() : null,
+      stock: v.stock !== '' && v.stock != null ? parseInt(v.stock, 10) : null,
+    }));
     const data = {
       titulo: form.titulo,
       descripcion: form.descripcion,
@@ -90,6 +188,8 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
       publicado: form.publicado === 1 ? 1 : 0,
       imagen_url: (imgs[0] || '').trim(),
       imagenes_extra: imgs.slice(1).map((s) => s.trim()).filter(Boolean).join(',') || null,
+      atributos: JSON.stringify(attrGroups),
+      variaciones: finalVariantes,
     };
 
     let res;
@@ -143,7 +243,56 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
             <input type="number" min="0" className="input w-full" placeholder=" " value={form.stock} onChange={set('stock')} />
             <label>{t('pm.stock')}</label>
           </div>
-          <div className="field-check">
+
+          <details className="vars-editor">
+            <summary>{t('pm.vars.title')}</summary>
+            <p className="vars-hint">{t('pm.vars.hint')}</p>
+            {grupos.map((g, i) => (
+              <div className="var-group-row" key={i}>
+                <input
+                  className="input rel-1"
+                  name="nombre"
+                  placeholder={t('pm.vars.group.name')}
+                  value={g.nombre}
+                  onChange={setGrupo(i)}
+                />
+                <input
+                  className="input rel-2"
+                  name="opciones"
+                  placeholder={t('pm.vars.group.opts')}
+                  value={g.opciones}
+                  onChange={setGrupo(i)}
+                />
+                {grupos.length > 1 ? (
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeGrupo(i)}>×</button>
+                ) : null}
+              </div>
+            ))}
+            <div className="flex items-center gap-2 flex-wrap mt-2">
+              <button type="button" className="btn btn-secondary btn-sm" onClick={addGrupo}>{t('pm.vars.add.group')}</button>
+              <button type="button" className="btn btn-accent btn-sm" onClick={regenerate}>{t('pm.vars.generate')}</button>
+            </div>
+            {variantes.length > 0 ? (
+              <div className="vars-table">
+                <div className="vars-table-head">
+                  <span>{t('pm.vars.combo')}</span>
+                  <span>{t('pm.price')}</span>
+                  <span>{t('pm.stock')}</span>
+                  <span />
+                </div>
+                {variantes.map((v, i) => (
+                  <div className="vars-table-row" key={comboKey(v.atributos)}>
+                    <span className="vars-combo-name">{v.nombre}</span>
+                    <input className="input rel-1" name="precio" placeholder="base" value={v.precio} onChange={setVariante(i)} />
+                    <input className="input rel-1" name="stock" placeholder="base" value={v.stock} onChange={setVariante(i)} />
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeVariante(i)}>×</button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </details>
+
+          <div className="field-check mb-5">
             <label className="check-row">
               <input type="checkbox" checked={form.publicado === 1} onChange={(e) => setForm((f) => ({ ...f, publicado: e.target.checked ? 1 : 0 }))} />
               <span>{t('pm.publicado')}</span>
@@ -186,7 +335,7 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
           </div>
           <div className="modal-actions">
             <button type="button" className="btn btn-ghost" onClick={onClose}>{t('pm.cancel')}</button>
-            <button type="submit" className="btn btn-secondary">{t('pm.save')}</button>
+            <button type="submit" className="btn btn-accent">{t('pm.save')}</button>
           </div>
         </form>
       </div>

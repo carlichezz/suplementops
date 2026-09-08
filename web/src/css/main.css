@@ -619,6 +619,13 @@ body {
   margin: 3px 0;
 }
 
+.cart-variant {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-top: 1px;
+}
+
 .cart-qty {
   display: flex;
   align-items: center;
@@ -892,6 +899,63 @@ body {
   margin: 18px 0;
 }
 
+/* Selector de variaciones en la página de producto */
+.var-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.var-group-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.var-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.var-chip {
+  padding: 8px 14px;
+  border-radius: 0.625rem;
+  border: 1px solid color-mix(in oklab, var(--text) 20%, transparent);
+  background: var(--color-base-100);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.var-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.var-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-content);
+}
+
+.var-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: color-mix(in oklab, var(--text) 15%, transparent);
+  color: var(--muted);
+}
+
+.var-summary {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
 .related {
   margin-top: 36px;
 }
@@ -1065,6 +1129,88 @@ body {
 .checkout-line .cl-name {
   flex: 1;
   color: var(--text);
+}
+
+.checkout-line .cl-variant {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   Editor de variaciones (admin)
+   ============================================================ */
+.vars-editor {
+  border: 1px solid color-mix(in oklab, var(--text) 15%, transparent);
+  border-radius: 0.75rem;
+  padding: 12px 14px;
+  margin: 14px 0;
+  background: color-mix(in oklab, var(--color-base-100) 60%, transparent);
+}
+
+.vars-editor summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.vars-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 8px 0 10px;
+  line-height: 1.5;
+}
+
+.var-group-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.var-group-row .rel-1 {
+  flex: 1;
+}
+
+.var-group-row .rel-2 {
+  flex: 1.5;
+}
+
+.vars-table {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vars-table-head,
+.vars-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 28px;
+  gap: 8px;
+  align-items: center;
+}
+
+.vars-table-head {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 4px 0;
+}
+
+.vars-table-row {
+  padding: 4px 0;
+}
+
+.vars-combo-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .loc-info {

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
-import { money, priceNum } from '../lib/format';
+import { money, priceNum, variantOf, variantPrice, variantStock } from '../lib/format';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
 
 function CartFly({ x, y, onDone }) {
@@ -57,8 +57,8 @@ export default function CartUI({ catalog = [] }) {
   };
 
   const increment = (item, p) => {
-    const max = p && p.stock != null ? p.stock : 99;
-    if (item.cantidad < max) setQty(item.id, item.cantidad + 1, max);
+    const max = variantStock(p, item.variante_id);
+    if (item.cantidad < max) setQty(item.id, item.cantidad + 1, max, item.variante_id);
   };
 
   return (
@@ -88,9 +88,10 @@ export default function CartUI({ catalog = [] }) {
                   const p = catalog.find((x) => x.id == item.id);
                   if (!p) return null;
                   const tp = tr(p);
-                  const subtotal = priceNum(p.precio) * item.cantidad;
+                  const v = variantOf(p, item.variante_id);
+                  const subtotal = priceNum(variantPrice(p, item.variante_id)) * item.cantidad;
                   return (
-                    <div className="cart-item" key={p.id}>
+                    <div className="cart-item" key={`${p.id}:${item.variante_id || ''}`}>
                       <Link className="cart-thumb" to={`/product/${p.id}`}>
                         {p.imagen_url ? (
                           <img
@@ -103,12 +104,13 @@ export default function CartUI({ catalog = [] }) {
                       </Link>
                       <div className="cart-info">
                         <Link className="cart-name" to={`/product/${p.id}`}>{tp.titulo}</Link>
-                        <div className="cart-price">{p.precio}</div>
+                        {v && v.nombre ? <div className="cart-variant">{v.nombre}</div> : null}
+                        <div className="cart-price">{variantPrice(p, item.variante_id)}</div>
                         <div className="cart-qty">
-                          <button className="btn btn-xs btn-ghost" onClick={() => setQty(item.id, item.cantidad - 1)} aria-label={t('cart.less')}>−</button>
+                          <button className="btn btn-xs btn-ghost" onClick={() => setQty(item.id, item.cantidad - 1, null, item.variante_id)} aria-label={t('cart.less')}>−</button>
                           <span className="qty-num">{item.cantidad}</span>
                           <button className="btn btn-xs btn-ghost" onClick={() => increment(item, p)} aria-label={t('cart.more')}>+</button>
-                          <button className="btn btn-xs btn-ghost text-error" onClick={() => remove(item.id)}>{t('cart.remove')}</button>
+                          <button className="btn btn-xs btn-ghost text-error" onClick={() => remove(item.id, item.variante_id)}>{t('cart.remove')}</button>
                         </div>
                       </div>
                       <div className="cart-subtotal">{money(subtotal)}</div>

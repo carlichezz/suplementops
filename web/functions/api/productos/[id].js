@@ -16,6 +16,21 @@ export const onRequestGet = async (context) => {
     return Response.json({ error: 'Producto no encontrado' }, { status: 404 });
   }
 
+  const { results: vars } = await env.DB.prepare(
+    'SELECT * FROM variaciones WHERE producto_id = ? ORDER BY pos ASC'
+  )
+    .bind(id)
+    .all();
+  result.atributos = result.atributos ? JSON.parse(result.atributos) : [];
+  result.variaciones = (vars || []).map((v) => ({
+    id: v.id,
+    nombre: v.nombre,
+    atributos: v.atributos ? JSON.parse(v.atributos) : {},
+    precio: v.precio,
+    stock: v.stock,
+    pos: v.pos,
+  }));
+
   return Response.json(result);
 };
 
@@ -31,7 +46,7 @@ export const onRequestPut = async (context) => {
   const {
     titulo, descripcion, titulo_es, descripcion_es, precio,
     imagen_url, imagen_alt,
-    stock, categoria_id, imagenes_extra, publicado,
+    stock, categoria_id, imagenes_extra, publicado, atributos, variaciones,
   } = body;
 
   const existing = await env.DB.prepare('SELECT id FROM productos WHERE id = ?')
@@ -42,11 +57,13 @@ export const onRequestPut = async (context) => {
     return Response.json({ error: 'Producto no encontrado' }, { status: 404 });
   }
 
+  const attrJson = atributos && Array.isArray(atributos) && atributos.length ? JSON.stringify(atributos) : null;
+
   const { success } = await env.DB.prepare(
     `UPDATE productos SET
        titulo = ?, descripcion = ?, titulo_es = ?,
        descripcion_es = ?, precio = ?, imagen_url = ?, imagen_alt = ?,
-       stock = ?, categoria_id = ?, imagenes_extra = ?, publicado = ?
+       stock = ?, categoria_id = ?, imagenes_extra = ?, publicado = ?, atributos = ?
      WHERE id = ?`
   )
     .bind(
@@ -54,12 +71,27 @@ export const onRequestPut = async (context) => {
       titulo_es || null, descripcion_es || null,
       precio || null, imagen_url || null,
       imagen_alt || null, stock ?? 10, categoria_id || null,
-      imagenes_extra || null, publicado == null ? 1 : Number(publicado), id
+      imagenes_extra || null, publicado == null ? 1 : Number(publicado), attrJson, id
     )
     .run();
 
   if (!success) {
     return Response.json({ error: 'No se pudo actualizar el producto' }, { status: 500 });
+  }
+
+  if (variaciones !== undefined) {
+    await env.DB.prepare('DELETE FROM variaciones WHERE producto_id = ?').bind(id).run();
+    const rows = (variaciones || [])
+      .map((v, i) => [String(v.nombre || '').trim(), v.atributos, v.precio ?? null, v.stock ?? null, i])
+      .filter((r) => r[0]);
+    for (const [nombre, atributos, precio, stock, pos] of rows) {
+      await env.DB.prepare(
+        `INSERT INTO variaciones (producto_id, nombre, atributos, precio, stock, pos)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      )
+        .bind(id, nombre, JSON.stringify(atributos || {}), precio, stock, pos)
+        .run();
+    }
   }
 
   return Response.json({ ok: true });
@@ -73,11 +105,15 @@ export const onRequestDelete = async (context) => {
 
   const { id } = params;
 
-  const { success } = await env.DB.prepare('DELETE FROM productos WHERE id = ?')
+  const { success } = await env.DB.prepare('DELETE FROM variaciones WHERE producto_id = ?')
     .bind(id)
     .run();
-
   if (!success) {
+    return Response.json({ error: 'No se pudo eliminar el producto' }, { status: 500 });
+  }
+
+  const del = await env.DB.prepare('DELETE FROM productos WHERE id = ?').bind(id).run();
+  if (!del.success) {
     return Response.json({ error: 'No se pudo eliminar el producto' }, { status: 500 });
   }
 
