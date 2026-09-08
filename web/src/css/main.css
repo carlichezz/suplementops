@@ -939,6 +939,68 @@ body {
   color: var(--muted);
 }
 
+/* Floating labels: el <label> vive dentro del input y sube al enfocar o al
+   escribir. Requiere que el input use placeholder=" " (uno o más espacios)
+   para poder usar :placeholder-shown. El label debe ir DESPUÉS del input. */
+.field-float {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.field-float .input,
+.field-float .textarea {
+  width: 100%;
+  padding-top: 1.35rem;
+  padding-bottom: 0.4rem;
+  line-height: 1.2;
+}
+
+.field-float > label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0;
+  color: var(--muted);
+  pointer-events: none;
+  transition: all 0.18s ease;
+  z-index: 1;
+}
+
+.field-float > .textarea + label {
+  top: 18px;
+  transform: none;
+}
+
+.field-float > .input:focus + label,
+.field-float > .input:not(:placeholder-shown) + label,
+.field-float > .textarea:focus + label,
+.field-float > .textarea:not(:placeholder-shown) + label {
+  top: 4px;
+  transform: none;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.field-check .check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.field-check .check-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
 .modal-actions {
   display: flex;
   gap: 10px;
@@ -1539,7 +1601,44 @@ body {
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+}
+
+.order-nav-btn {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.8rem;
+  line-height: 1;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.order-nav-btn:hover:not(:disabled) {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.order-nav-btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.order-header-center {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .order-oid {
@@ -1547,37 +1646,15 @@ body {
   font-weight: 800;
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
-}
-
-.order-nav {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  margin-right: 4px;
-}
-
-.order-nav .btn {
-  width: 26px;
-  height: 26px;
-  min-height: 26px;
-  padding: 0;
-  font-size: 1.1rem;
-  line-height: 1;
-  border-radius: 8px;
-}
-
-.order-nav .btn:disabled {
-  opacity: 0.35;
-  pointer-events: none;
 }
 
 .order-nav-count {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--muted);
-  min-width: 44px;
-  text-align: center;
+  margin-left: 6px;
 }
 
 .order-modal {

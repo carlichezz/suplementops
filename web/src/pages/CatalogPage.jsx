@@ -7,7 +7,7 @@ import ProductCardSkeleton from '../components/ProductCardSkeleton';
 import SortMenu from '../components/SortMenu';
 import { api } from '../lib/api';
 import { useLang } from '../lib/i18n';
-import { priceNum, rankNum, ratingNum } from '../lib/format';
+import { priceNum } from '../lib/format';
 
 const INITIAL_COUNT = 8;
 const LOAD_CHUNK = 4;
@@ -19,7 +19,7 @@ export default function CatalogPage() {
   const [shown, setShown] = useState(INITIAL_COUNT);
   const [q, setQ] = useState('');
   const [currentCat, setCurrentCat] = useState('');
-  const [currentSort, setCurrentSort] = useState('ranking');
+  const [currentSort, setCurrentSort] = useState('name');
   const [alert, setAlert] = useState(null);
   const alertTimer = useRef(null);
   const sentinelRef = useRef(null);
@@ -50,6 +50,7 @@ export default function CatalogPage() {
   const cats = useMemo(() => {
     const m = {};
     all.forEach((p) => {
+      if (p.publicado === 0) return;
       if (p.categoria_id && !m[p.categoria_id]) {
         m[p.categoria_id] = catName(p.categoria_nombre || t('cats.fallback', { n: p.categoria_id }));
       }
@@ -62,6 +63,7 @@ export default function CatalogPage() {
     const filtered = all.filter((p) => {
       const tp = tr(p);
       return (
+        p.publicado !== 0 &&
         (((tp.titulo || '').toLowerCase().includes(query) ||
           (tp.descripcion || '').toLowerCase().includes(query)) &&
           (!currentCat || String(p.categoria_id) === currentCat))
@@ -73,12 +75,8 @@ export default function CatalogPage() {
           return priceNum(a.precio) - priceNum(b.precio);
         case 'price-desc':
           return priceNum(b.precio) - priceNum(a.precio);
-        case 'name':
-          return (tr(a).titulo || '').localeCompare(tr(b).titulo || '');
-        case 'rating':
-          return ratingNum(b.rating) - ratingNum(a.rating);
         default:
-          return rankNum(a.ranking) - rankNum(b.ranking);
+          return (tr(a).titulo || '').localeCompare(tr(b).titulo || '');
       }
     });
     return filtered;

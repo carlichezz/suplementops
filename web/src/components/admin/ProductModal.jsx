@@ -5,17 +5,10 @@ import { useLang } from '../../lib/i18n';
 const EMPTY_FORM = {
   titulo: '',
   descripcion: '',
-  titulo_es: '',
-  descripcion_es: '',
   categoria_id: '',
   precio: '',
-  ranking: '',
-  rating: '',
-  num_reviews: '',
-  num_ofertas: '',
   stock: '',
-  asin: '',
-  url_producto: '',
+  publicado: 1,
 };
 
 export default function ProductModal({ open, product, categorias, onClose, onShowAlert, onSaved }) {
@@ -46,17 +39,10 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
       setForm({
         titulo: product.titulo || '',
         descripcion: product.descripcion || '',
-        titulo_es: product.titulo_es || '',
-        descripcion_es: product.descripcion_es || '',
         categoria_id: product.categoria_id ?? '',
         precio: product.precio || '',
-        ranking: product.ranking || '',
-        rating: product.rating || '',
-        num_reviews: product.num_reviews || '',
-        num_ofertas: product.num_ofertas || '',
         stock: product.stock != null ? product.stock : '',
-        asin: product.asin || '',
-        url_producto: product.url_producto || '',
+        publicado: product.publicado == null ? 1 : Number(product.publicado),
       });
     } else {
       setForm(EMPTY_FORM);
@@ -94,19 +80,14 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
     e.preventDefault();
     const id = product && product.id;
     const data = {
-      titulo: form.titulo || form.titulo_es,
-      descripcion: form.descripcion || form.descripcion_es,
-      titulo_es: form.titulo_es,
-      descripcion_es: form.descripcion_es,
+      titulo: form.titulo,
+      descripcion: form.descripcion,
+      titulo_es: form.titulo,
+      descripcion_es: form.descripcion,
       categoria_id: form.categoria_id || null,
       precio: form.precio,
-      ranking: form.ranking,
-      rating: form.rating,
-      num_reviews: form.num_reviews,
-      num_ofertas: form.num_ofertas,
       stock: parseInt(form.stock, 10),
-      asin: form.asin,
-      url_producto: form.url_producto,
+      publicado: form.publicado === 1 ? 1 : 0,
       imagen_url: (imgs[0] || '').trim(),
       imagenes_extra: imgs.slice(1).map((s) => s.trim()).filter(Boolean).join(',') || null,
     };
@@ -137,13 +118,13 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
       <div className="modal-box modal-card">
         <h2>{product ? t('pm.edit') : t('pm.new')}</h2>
         <form onSubmit={onSubmit}>
-          <div className="field">
+          <div className="field-float">
+            <input className="input w-full" required placeholder=" " value={form.titulo} onChange={set('titulo')} />
             <label>{t('pm.titulo')}</label>
-            <input className="input w-full" required value={form.titulo_es} onChange={set('titulo_es')} />
           </div>
-          <div className="field">
+          <div className="field-float">
+            <textarea className="textarea w-full" placeholder=" " value={form.descripcion} onChange={set('descripcion')} />
             <label>{t('pm.desc')}</label>
-            <textarea className="textarea w-full" value={form.descripcion_es} onChange={set('descripcion_es')} />
           </div>
           <div className="field">
             <label>{t('pm.cat')}</label>
@@ -154,37 +135,19 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
               ))}
             </select>
           </div>
-          <div className="field">
+          <div className="field-float">
+            <input className="input w-full" placeholder=" " value={form.precio} onChange={set('precio')} />
             <label>{t('pm.price')}</label>
-            <input className="input w-full" placeholder="$24.00" value={form.precio} onChange={set('precio')} />
           </div>
-          <div className="field">
-            <label>{t('pm.ranking')}</label>
-            <input className="input w-full" placeholder="#1" value={form.ranking} onChange={set('ranking')} />
-          </div>
-          <div className="field">
-            <label>{t('pm.rating')}</label>
-            <input className="input w-full" placeholder="4.6 out of 5 stars" value={form.rating} onChange={set('rating')} />
-          </div>
-          <div className="field">
-            <label>{t('pm.reviews')}</label>
-            <input className="input w-full" placeholder="6,435" value={form.num_reviews} onChange={set('num_reviews')} />
-          </div>
-          <div className="field">
-            <label>{t('pm.offers')}</label>
-            <input className="input w-full" placeholder="2" value={form.num_ofertas} onChange={set('num_ofertas')} />
-          </div>
-          <div className="field">
+          <div className="field-float">
+            <input type="number" min="0" className="input w-full" placeholder=" " value={form.stock} onChange={set('stock')} />
             <label>{t('pm.stock')}</label>
-            <input type="number" min="0" className="input w-full" placeholder="10" value={form.stock} onChange={set('stock')} />
           </div>
-          <div className="field">
-            <label>{t('pm.asin')}</label>
-            <input className="input w-full" placeholder="B07SH31T9V" value={form.asin} onChange={set('asin')} />
-          </div>
-          <div className="field">
-            <label>{t('pm.url')}</label>
-            <input className="input w-full" value={form.url_producto} onChange={set('url_producto')} />
+          <div className="field-check">
+            <label className="check-row">
+              <input type="checkbox" checked={form.publicado === 1} onChange={(e) => setForm((f) => ({ ...f, publicado: e.target.checked ? 1 : 0 }))} />
+              <span>{t('pm.publicado')}</span>
+            </label>
           </div>
           <div className="field">
             <label>{t('pm.images')}</label>

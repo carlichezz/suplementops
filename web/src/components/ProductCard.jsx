@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
 import { isSoldOut, stockOf } from '../lib/format';
-import { StarIcon } from './Icons';
 import StockTag from './StockTag';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
 
@@ -14,7 +13,6 @@ export default function ProductCard({ p, showDesc = true, showActions = true }) 
   const tp = tr(p);
   const soldOut = isSoldOut(p);
   const stock = stockOf(p);
-  const rating = p.rating ? String(p.rating).replace(' out of 5 stars', '') : '';
 
   const handleAdd = (e) => {
     if (qtyOf(p.id) >= stock) return;
@@ -31,9 +29,6 @@ return (
     <div className="card bg-base-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden">
       <Link to={`/product/${p.id}`} className="group block">
         <div className="relative aspect-[4/3] bg-base-100 mt-2">
-          {p.ranking ? (
-            <span className="badge badge-accent absolute top-2 left-2 z-10 rounded-md font-semibold shadow">{p.ranking}</span>
-          ) : null}
           {p.imagen_url ? (
             <img
               loading="lazy"
@@ -52,12 +47,6 @@ return (
         ) : null}
         <div className="meta text-[0.82rem] text-neutral/60 flex items-center gap-2 flex-wrap">
           {p.categoria_nombre ? <span className="badge badge-secondary border-0 font-semibold px-2 py-1 text-xs whitespace-nowrap">{catName(p.categoria_nombre)}</span> : null}
-          {p.rating ? (
-            <span className="stars inline-flex items-center gap-1 text-warning">
-              <StarIcon />
-              {rating}
-            </span>
-          ) : null}
         </div>
         <div className="price mt-auto text-[1.35rem] font-bold text-accent">{p.precio}</div>
         <StockTag p={p} />

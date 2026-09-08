@@ -173,20 +173,18 @@ export default function OrderModal({
     >
       <div className="modal-box modal-card">
         <div className="order-header">
-          <div>
+          <button type="button" className="order-nav-btn" disabled={!hasPrev} onClick={() => requestNav(-1)} aria-label={t('om.prev')}>‹</button>
+          <div className="order-header-center">
             <div className="order-oid">
-              <span className="order-nav">
-                <button type="button" className="btn" disabled={!hasPrev} onClick={() => requestNav(-1)} aria-label={t('om.prev')}>‹</button>
-                <span className="order-nav-count">{myIdx >= 0 ? `${myIdx + 1}/${orders.length}` : ''}</span>
-                <button type="button" className="btn" disabled={!hasNext} onClick={() => requestNav(1)} aria-label={t('om.next')}>›</button>
-              </span>
-              {t('om.title')} #{order.id}
+              #{order.id}
+              {myIdx >= 0 ? <span className="order-nav-count">({myIdx + 1}/{orders.length})</span> : null}
             </div>
             <div className="order-date">Creada: {formatFecha(order.creado_en)}</div>
+            <span className="order-status-badge" style={{ background: estadoColor(order.estado), color: '#fff' }}>
+              ● {label(order.estado)}
+            </span>
           </div>
-          <span className="order-status-badge" style={{ background: estadoColor(order.estado), color: '#fff' }}>
-            ● {label(order.estado)}
-          </span>
+          <button type="button" className="order-nav-btn" disabled={!hasNext} onClick={() => requestNav(1)} aria-label={t('om.next')}>›</button>
         </div>
 
         <div className="divider my-2" style={{ color: 'var(--muted)' }}>{t('om.client')}</div>
@@ -289,10 +287,6 @@ export default function OrderModal({
             </div>
           </div>
         ) : null}
-
-        <div className="modal-actions">
-          <button type="button" className="btn btn-ghost" onClick={() => requestClose()}>{t('om.close')}</button>
-        </div>
       </div>
     </dialog>
   );

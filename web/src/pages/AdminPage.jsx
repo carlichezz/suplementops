@@ -526,6 +526,7 @@ export default function AdminPage() {
                         <div className="admin-list-info">
                           <div className="admin-list-title">{p.titulo}</div>
                           <div className="admin-list-meta">
+                            {p.publicado === 0 ? <span className="badge badge-ghost badge-sm">{t('admin.hidden')}</span> : null}
                             {p.categoria_nombre ? <span className="cat-chip">{p.categoria_nombre}</span> : null}
                             <span className="admin-list-price">{p.precio}</span>
                             <StockTag p={p} />

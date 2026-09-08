@@ -6,7 +6,6 @@ import CartUI from '../components/CartUI';
 import ProductCard from '../components/ProductCard';
 import StockTag from '../components/StockTag';
 import Lightbox from '../components/Lightbox';
-import { StarIcon } from '../components/Icons';
 import { api } from '../lib/api';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
@@ -153,7 +152,6 @@ export default function ProductPage() {
   const tp = tr(p);
   const soldOut = isSoldOut(p);
   const stock = stockOf(p);
-  const rating = p.rating ? String(p.rating).replace(' out of 5 stars', '') : '';
 
   const handleAdd = (e) => {
     if (qtyOf(p.id) >= stock) return;
@@ -227,17 +225,10 @@ export default function ProductPage() {
             ) : null}
           </div>
           <div className="product-info">
-            {p.ranking ? <span className="badge badge-accent rounded-md font-semibold shadow">{p.ranking}</span> : null}
             <h1 className="text-2xl font-bold mt-2">{tp.titulo}</h1>
             <div className="product-price">{p.precio}</div>
             <div className="product-meta flex items-center gap-2 flex-wrap">
               {p.categoria_nombre ? <span className="badge badge-secondary border-0 font-semibold px-2 py-1 text-xs whitespace-nowrap">{catName(p.categoria_nombre)}</span> : null}
-              {p.rating ? (
-                <span className="stars inline-flex items-center gap-1 text-warning">
-                  <StarIcon className="w-4 h-4" />
-                  <b>{rating}</b>
-                </span>
-              ) : null}
             </div>
             <StockTag p={p} />
             {tp.descripcion && tp.descripcion !== tp.titulo ? <div className="product-desc">{tp.descripcion}</div> : null}

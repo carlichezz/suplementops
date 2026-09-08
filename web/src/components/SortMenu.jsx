@@ -2,11 +2,9 @@ import React from 'react';
 import { useLang } from '../lib/i18n';
 
 const SORTS = [
-  { key: 'ranking', i18n: 'sort.ranking' },
+  { key: 'name', i18n: 'sort.name' },
   { key: 'price-asc', i18n: 'sort.price-asc' },
   { key: 'price-desc', i18n: 'sort.price-desc' },
-  { key: 'name', i18n: 'sort.name' },
-  { key: 'rating', i18n: 'sort.rating' },
 ];
 
 export default function SortMenu({ currentSort, onChange }) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { sdUrl, onImgFallback } from '../lib/imageUrl';
+import { onImgFallback } from '../lib/imageUrl';
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 const MAX = 8;
@@ -7,7 +7,6 @@ const MAX = 8;
 export default function Lightbox({ images, index, onClose, onNavigate }) {
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [hd, setHd] = useState(false);
   const drag = useRef(null);
 
   useEffect(() => {
@@ -137,24 +136,10 @@ export default function Lightbox({ images, index, onClose, onNavigate }) {
         >
           1:1
         </button>
-        <button
-          type="button"
-          aria-label={hd ? 'Ver en calidad estándar (SD)' : 'Ver en alta calidad (HD)'}
-          aria-pressed={hd}
-          className={`btn btn-sm ${hd ? 'btn-accent text-white' : 'btn-ghost text-white'}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            setHd((v) => !v);
-            setScale(1);
-            setPos({ x: 0, y: 0 });
-          }}
-        >
-          {hd ? 'SD' : 'HD'}
-        </button>
       </div>
 
       <img
-        src={hd ? images[index] : sdUrl(images[index], 1200)}
+        src={images[index]}
         alt=""
         draggable={false}
         className="max-w-[92vw] max-h-[88vh] object-contain transition-transform duration-200 will-change-transform"

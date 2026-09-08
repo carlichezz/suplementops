@@ -197,14 +197,14 @@ export default function CheckoutPage() {
                 <div className="divider my-4"></div>
 
                 <form onSubmit={onSubmit} noValidate>
-                  <div className="field">
+                  <div className="field-float">
+                    <input className="input w-full" required autoComplete="name" placeholder=" " value={form.nombre || ''} onChange={set('nombre')} />
                     <label>{t('co.name')}</label>
-                    <input className="input w-full" required autoComplete="name" value={form.nombre || ''} onChange={set('nombre')} />
                   </div>
 
-                  <div className="field">
+                  <div className="field-float">
+                    <textarea className="textarea w-full" required placeholder=" " value={form.direccion || ''} onChange={set('direccion')} />
                     <label>{t('co.address')}</label>
-                    <textarea className="textarea w-full" required placeholder={t('co.address.ph')} value={form.direccion || ''} onChange={set('direccion')} />
                   </div>
 
                   <div className="field">
@@ -234,19 +234,19 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div className="field">
+                  <div className="field-float">
+                    <input className="input w-full" type="tel" required autoComplete="tel" placeholder=" " value={form.telefono || ''} onChange={set('telefono')} />
                     <label>{t('co.phone')}</label>
-                    <input className="input w-full" type="tel" required autoComplete="tel" placeholder="+56 9 1234 5678" value={form.telefono || ''} onChange={set('telefono')} />
                   </div>
 
-                  <div className="field">
+                  <div className="field-float">
+                    <input className="input w-full" type="tel" autoComplete="tel" placeholder=" " value={form.telefono_alt || ''} onChange={set('telefono_alt')} />
                     <label>{t('co.phone_alt')}</label>
-                    <input className="input w-full" type="tel" autoComplete="tel" placeholder="+56 9 0000 0000" value={form.telefono_alt || ''} onChange={set('telefono_alt')} />
                   </div>
 
-                  <div className="field">
+                  <div className="field-float">
+                    <textarea className="textarea w-full" placeholder=" " value={form.nota || ''} onChange={set('nota')} />
                     <label>{t('co.nota')}</label>
-                    <textarea className="textarea w-full" placeholder={t('co.nota.ph')} value={form.nota || ''} onChange={set('nota')} />
                   </div>
 
                   <p className="required-note">{t('co.required')}</p>

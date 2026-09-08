@@ -29,9 +29,9 @@ export const onRequestPut = async (context) => {
   const body = await request.json();
 
   const {
-    asin, ranking, titulo, descripcion, titulo_es, descripcion_es, precio, rating,
-    num_reviews, num_ofertas, url_producto, imagen_url, imagen_alt,
-    stock, categoria_id, imagenes_extra,
+    titulo, descripcion, titulo_es, descripcion_es, precio,
+    imagen_url, imagen_alt,
+    stock, categoria_id, imagenes_extra, publicado,
   } = body;
 
   const existing = await env.DB.prepare('SELECT id FROM productos WHERE id = ?')
@@ -44,19 +44,17 @@ export const onRequestPut = async (context) => {
 
   const { success } = await env.DB.prepare(
     `UPDATE productos SET
-       asin = ?, ranking = ?, titulo = ?, descripcion = ?, titulo_es = ?,
-       descripcion_es = ?, precio = ?, rating = ?, num_reviews = ?,
-       num_ofertas = ?, url_producto = ?, imagen_url = ?, imagen_alt = ?,
-       stock = ?, categoria_id = ?, imagenes_extra = ?
+       titulo = ?, descripcion = ?, titulo_es = ?,
+       descripcion_es = ?, precio = ?, imagen_url = ?, imagen_alt = ?,
+       stock = ?, categoria_id = ?, imagenes_extra = ?, publicado = ?
      WHERE id = ?`
   )
     .bind(
-      asin || null, ranking || null, titulo || '', descripcion || null,
+      titulo || '', descripcion || null,
       titulo_es || null, descripcion_es || null,
-      precio || null, rating || null, num_reviews || null,
-      num_ofertas || null, url_producto || null, imagen_url || null,
+      precio || null, imagen_url || null,
       imagen_alt || null, stock ?? 10, categoria_id || null,
-      imagenes_extra || null, id
+      imagenes_extra || null, publicado == null ? 1 : Number(publicado), id
     )
     .run();
 
