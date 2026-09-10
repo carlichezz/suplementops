@@ -11,6 +11,7 @@ import { api, adminSessionValid, estadoColor } from '../lib/api';
 import { useLang } from '../lib/i18n';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
 import { variantGroups } from '../lib/format';
+import { setSeo, DEFAULT_DESC } from '../lib/seo';
 
 const TABS = [
   { key: 'productos', i18n: 'admin.tab.productos' },
@@ -117,7 +118,7 @@ export default function AdminPage() {
   }, [catModalOpen]);
 
   useEffect(() => {
-    document.title = t('page.title.admin');
+    setSeo({ title: t('page.title.admin'), description: DEFAULT_DESC, noindex: true, canonical: '/admin' });
   }, [lang]);
 
   useEffect(() => {
@@ -503,6 +504,22 @@ export default function AdminPage() {
                   {t('admin.vm.edit.product')}
                 </button>
               ) : null}
+            {tab === 'ordenes' ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select
+                    className="select select-sm shrink-0 min-w-[7rem] w-auto"
+                    value={filtroOrden}
+                    onChange={(e) => loadOrdenes(e.target.value)}
+                  >
+                    <option value="">{t('admin.all')}</option>
+                    <option value="pendiente">{t('estado.pendiente')}</option>
+                    <option value="despachada">{t('estado.despachada')}</option>
+                    <option value="entregada">{t('estado.entregada')}</option>
+                  </select>
+                </div>
+              ) : null}
+            </div>
+
             {tab === 'variaciones' ? (
               <div className="tab-panel active">
                 {loadingTab && allProducts.length === 0 ? (
@@ -538,22 +555,6 @@ export default function AdminPage() {
                 )}
               </div>
             ) : null}
-
-            {tab === 'ordenes' ? (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <select
-                    className="select select-sm shrink-0 min-w-[7rem] w-auto"
-                    value={filtroOrden}
-                    onChange={(e) => loadOrdenes(e.target.value)}
-                  >
-                    <option value="">{t('admin.all')}</option>
-                    <option value="pendiente">{t('estado.pendiente')}</option>
-                    <option value="despachada">{t('estado.despachada')}</option>
-                    <option value="entregada">{t('estado.entregada')}</option>
-                  </select>
-                </div>
-              ) : null}
-            </div>
 
             <div className="toolbar mb-1 flex items-center gap-3">
               <div className="cats flex gap-2 overflow-x-auto pb-1 flex-1 min-w-0">

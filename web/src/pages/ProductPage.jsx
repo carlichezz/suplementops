@@ -9,8 +9,9 @@ import Lightbox from '../components/Lightbox';
 import { api } from '../lib/api';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
-import { isSoldOut, stockOf, variantPrice, variantStock, variantOf, variantGroups } from '../lib/format';
+import { isSoldOut, stockOf, variantPrice, variantStock, variantOf, variantGroups, colorHex, isColorGroup } from '../lib/format';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
+import { setSeo, SITE } from '../lib/seo';
 
 function galleryImages(p, selectedVariant) {
   const imgs = [];
@@ -119,8 +120,40 @@ export default function ProductPage() {
   }, [activeIdx]);
 
   useEffect(() => {
-    document.title = t('page.title.product');
-  }, [lang]);
+    if (!current) {
+      setSeo({ title: t('page.title.product'), description: '', canonical: SITE + '/product/' + id });
+      return;
+    }
+    const tp = tr(current);
+    const variant = matchVariant(current, sel);
+    const price = variantPrice(current, variant && variant.id);
+    const priceNumOf = price != null ? parseFloat(String(price).replace(/[^\d.]/g, '')) : null;
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      '@id': `${SITE}/product/${current.id}#product`,
+      name: tp.titulo,
+      description: (tp.descripcion && tp.descripcion !== tp.titulo ? tp.descripcion : tp.titulo).slice(0, 300),
+      url: `${SITE}/product/${current.id}`,
+      image: current.imagen_url ? [current.imagen_url] : [],
+      productID: String(current.id),
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'USD',
+        price: priceNumOf != null ? priceNumOf.toFixed(2) : '0',
+        availability: stockOf(current) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        url: `${SITE}/product/${current.id}`,
+        itemCondition: 'https://schema.org/NewCondition',
+      },
+    };
+    setSeo({
+      title: `${tp.titulo} · Suplementos Deportivos`,
+      description: tp.descripcion || tp.titulo,
+      image: current.imagen_url || (variant && variant.imagen) || '',
+      canonical: SITE + '/product/' + current.id,
+      jsonLd,
+    });
+  }, [current, sel, lang]);
 
   useEffect(() => {
     if (!id) {
@@ -222,7 +255,7 @@ export default function ProductPage() {
                         {i <= activeIdx + 1 ? (
                           <img
                             src={sdUrl(u, 900)}
-                            alt=""
+                            alt={tp.titulo}
                             draggable={false}
                             onError={(e) => onImgFallback(e, u)}
                           />
@@ -238,7 +271,7 @@ export default function ProductPage() {
                         key={i}
                         className={`thumb ${i === activeIdx ? 'active' : ''}`}
                         src={sdUrl(u, 120)}
-                        alt=""
+                        alt={tp.titulo}
                         onClick={() => setActiveIdx(i)}
                         onError={(e) => onImgFallback(e, u)}
                       />
@@ -266,23 +299,40 @@ export default function ProductPage() {
             {tp.descripcion && tp.descripcion !== tp.titulo ? <div className="product-desc">{tp.descripcion}</div> : null}
             {hasGroups ? (
               <div className="product-options">
-                {groups.map((g) => (
-                  <div className="var-group" key={g.nombre}>
-                    <span className="var-group-label">{g.nombre}</span>
-                    <div className="var-chips">
-                      {(g.opciones || []).map((op) => (
-                        <button
-                          type="button"
-                          key={op}
-                          className={`var-chip${sel[g.nombre] === op ? ' active' : ''}`}
-                          onClick={() => setSel((s) => ({ ...s, [g.nombre]: op }))}
-                        >
-                          {op}
-                        </button>
-                      ))}
+                {groups.map((g) => {
+                  const colorGroup = isColorGroup(g.nombre);
+                  return (
+                    <div className="var-group" key={g.nombre}>
+                      <span className="var-group-label">{g.nombre}</span>
+                      <div className={`var-chips${colorGroup ? ' var-chips-colors' : ''}`}>
+                        {(g.opciones || []).map((op) =>
+                          colorGroup ? (
+                            <button
+                              type="button"
+                              key={op}
+                              className={`var-chip var-chip-color${sel[g.nombre] === op ? ' active' : ''}`}
+                              style={{ '--swatch': colorHex(op) }}
+                              onClick={() => setSel((s) => ({ ...s, [g.nombre]: op }))}
+                              aria-pressed={sel[g.nombre] === op}
+                            >
+                              <span className="var-swatch" aria-hidden="true"></span>
+                              <span className="var-swatch-label">{op}</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              key={op}
+                              className={`var-chip${sel[g.nombre] === op ? ' active' : ''}`}
+                              onClick={() => setSel((s) => ({ ...s, [g.nombre]: op }))}
+                            >
+                              {op}
+                            </button>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {selectedVariant && selectedVariant.nombre ? (
                   <div className="var-summary">{t('prod.variant', { name: selectedVariant.nombre })}</div>
                 ) : null}

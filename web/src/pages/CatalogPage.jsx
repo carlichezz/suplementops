@@ -8,6 +8,7 @@ import SortMenu from '../components/SortMenu';
 import { api } from '../lib/api';
 import { useLang } from '../lib/i18n';
 import { priceNum } from '../lib/format';
+import { setSeo, SITE, DEFAULT_DESC } from '../lib/seo';
 
 const INITIAL_COUNT = 8;
 const LOAD_CHUNK = 4;
@@ -44,7 +45,7 @@ export default function CatalogPage() {
   }, [q, currentCat, currentSort]);
 
   useEffect(() => {
-    document.title = t('page.title');
+    setSeo({ title: t('page.title'), description: DEFAULT_DESC, image: '', canonical: SITE });
   }, [lang]);
 
   const cats = useMemo(() => {

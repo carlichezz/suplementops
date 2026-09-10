@@ -50,3 +50,31 @@ export function variantGroups(p) {
   }
   return [...map.entries()].map(([nombre, opciones]) => ({ nombre, opciones }));
 }
+
+const COLOR_HEX = {
+  negro: '#1f2430', black: '#111111', 'negro/navy': '#14213d', gris: '#6b7280', gray: '#6b7280', grey: '#6b7280',
+  blanco: '#ffffff', white: '#f8fafc', crema: '#f5f0e6', beige: '#d6c8a9',
+  azul: '#2563eb', blue: '#2563eb', celeste: '#38bdf8', cyan: '#06b6d4', marino: '#1e3a8a', navy: '#1e3a8a',
+  rojo: '#dc2626', red: '#dc2626', borgoña: '#7f1d1d', vino: '#7f1d1d', burgundy: '#7f1d1d',
+  verde: '#16a34a', green: '#16a34a', esmeralda: '#10b981', oliva: '#65a30d', mint: '#5eead4', menta: '#5eead4',
+  amarillo: '#facc15', yellow: '#facc15', oro: '#d4a017', gold: '#d4a017',
+  naranja: '#ea580c', orange: '#ea580c', coral: '#ff6b6b',
+  rosa: '#ec4899', pink: '#ec4899', rosado: '#ec4899',
+  morado: '#7c3aed', purple: '#7c3aed', violeta: '#8b5cf6', violet: '#8b5cf6', lavanda: '#c4b5fd',
+  marron: '#8b5a2b', brown: '#8b5a2b', 'cafe': '#6f4e37', coffee: '#6f4e37',
+  turquesa: '#14b8a6', turquoise: '#14b8a6', teal: '#14b8a6',
+  plata: '#c0c0c0', silver: '#c0c0c0', plateado: '#c0c0c0',
+  transparente: 'transparent',
+};
+
+export function isColorGroup(name) {
+  return /color|colour/i.test(String(name || ''));
+}
+
+export function colorHex(opcion) {
+  const key = String(opcion || '').toLowerCase().trim();
+  if (COLOR_HEX[key]) return COLOR_HEX[key];
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 360;
+  return `hsl(${h} 62% 42%)`;
+}

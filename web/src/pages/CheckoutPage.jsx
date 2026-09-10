@@ -7,6 +7,7 @@ import { api, getLocation } from '../lib/api';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
 import { money, priceNum, variantPrice, variantOf } from '../lib/format';
+import { setSeo, DEFAULT_DESC } from '../lib/seo';
 
 const DATOS_KEY = 'checkout_datos';
 
@@ -70,7 +71,7 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    document.title = t('page.title.checkout');
+    setSeo({ title: t('page.title.checkout'), description: DEFAULT_DESC, noindex: true, canonical: '/checkout' });
   }, [lang]);
 
   const showToast = (msg, type = 'info') => {
