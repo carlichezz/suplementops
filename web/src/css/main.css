@@ -922,9 +922,9 @@ body {
 .var-chip {
   padding: 8px 14px;
   border-radius: 0.625rem;
-  border: 1px solid color-mix(in oklab, var(--text) 20%, transparent);
-  background: var(--color-base-100);
-  color: var(--text);
+  border: 1px solid color-mix(in oklab, var(--accent) 42%, transparent);
+  background: transparent;
+  color: var(--accent);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -934,13 +934,13 @@ body {
 
 .var-chip:hover {
   border-color: var(--accent);
-  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
 }
 
 .var-chip.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--accent-content);
+  color: #ffffff;
 }
 
 .var-chip:disabled {
@@ -969,7 +969,7 @@ body {
 }
 
 .var-chip-color.active .var-swatch {
-  box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--accent);
+  box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px #ffffff;
 }
 
 .var-chip-color .var-swatch-label {
