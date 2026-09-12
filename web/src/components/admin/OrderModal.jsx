@@ -3,7 +3,7 @@ import { PinIcon } from '../Icons';
 import { useLang } from '../../lib/i18n';
 import { ESTADOS_ORDEN, estadoColor } from '../../lib/api';
 import { money, priceNum } from '../../lib/format';
-import { sdUrl, onImgFallback } from '../../lib/imageUrl';
+import { sdUrl, onImgFallback, resUrl } from '../../lib/imageUrl';
 
 function formatFecha(v) {
   if (!v) return '—';
@@ -235,7 +235,7 @@ export default function OrderModal({
           <div className="od-items">
             {items.map((i, idx) => (
               <div className="od-item" key={i.id != null ? i.id : idx}>
-                {i.imagen_url ? <img src={sdUrl(i.imagen_url, 200)} alt="" onError={(e) => onImgFallback(e, i.imagen_url)} /> : <span className="od-thumb-empty" />}
+                {i.imagen_url ? <img src={resUrl(sdUrl(i.imagen_url, 200))} alt="" onError={(e) => onImgFallback(e, i.imagen_url)} /> : <span className="od-thumb-empty" />}
                 <div className="od-main">
                   <div className="od-title">
                     {i.titulo}

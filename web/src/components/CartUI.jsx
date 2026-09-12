@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
 import { money, priceNum, variantOf, variantPrice, variantStock } from '../lib/format';
-import { sdUrl, onImgFallback } from '../lib/imageUrl';
+import { sdUrl, onImgFallback, resUrl } from '../lib/imageUrl';
 
 function CartFly({ x, y, onDone }) {
   const elRef = useRef(null);
@@ -96,7 +96,7 @@ export default function CartUI({ catalog = [] }) {
                       <Link className="cart-thumb" to={`/product/${p.id}`}>
                         {thumb ? (
                           <img
-                            src={sdUrl(thumb, 200)}
+                            src={resUrl(sdUrl(thumb, 200))}
                             alt=""
                             loading="lazy"
                             onError={(e) => onImgFallback(e, thumb)}

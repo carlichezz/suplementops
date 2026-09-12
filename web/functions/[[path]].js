@@ -20,10 +20,41 @@ async function loadProduct(env, id) {
   return results[0] || null;
 }
 
-export async function onRequestGet(context) {
+// Proxy del bucket público de Supabase, servido desde el propio origen. El
+// origen responde 'cache-control: no-cache', lo que obligaba al navegador a
+// re-descargar cada imagen al volver atrás (visible en móvil). Aquí se sirven
+// con Cache-Control largo e immutable, y de paso quedan cacheadas por el SW
+// (que ya cachea las imágenes del mismo origen).
+const UPSTREAM_BASE = 'https://rkmaoovnzvvvgpxhczho.supabase.co/storage/v1/object/public/';
+
+async function proxyImage(request, url) {
+  const rel = url.pathname.slice('/img/'.length);
+  if (!rel.startsWith('imagenes/')) {
+    return new Response('Not Found', { status: 404 });
+  }
+  const accept = request.headers.get('accept') || '*/*';
+  const resp = await fetch(UPSTREAM_BASE + rel, { headers: { accept } });
+  const out = new Headers(resp.headers);
+  out.delete('set-cookie');
+  out.delete('content-disposition');
+  if (resp.ok) {
+    out.set('Content-Type', resp.headers.get('Content-Type') || 'image/webp');
+    out.set('Cache-Control', 'public, max-age=31536000, immutable');
+    return new Response(resp.body, { status: 200, headers: out });
+  }
+  out.set('Cache-Control', 'no-store');
+  return new Response(resp.body, { status: resp.status, headers: out });
+}
+
+async function handleRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+
+  // Imágenes del bucket público servidas desde el propio origen (ver proxyImage).
+  if (path.startsWith('/img/')) {
+    return proxyImage(request, url);
+  }
 
   // Sitemap dinámico: lista la home y todos los productos publicados.
   if (path === '/sitemap.xml') {
@@ -97,5 +128,8 @@ export async function onRequestGet(context) {
 
   return next();
 }
+
+export const onRequestGet = handleRequest;
+export const onRequestHead = handleRequest;
 
 export { SITE };

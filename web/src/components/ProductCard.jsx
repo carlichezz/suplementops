@@ -4,7 +4,7 @@ import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
 import { isSoldOut, stockOf, variantGroups } from '../lib/format';
 import StockTag from './StockTag';
-import { sdUrl, onImgFallback } from '../lib/imageUrl';
+import { sdUrl, onImgFallback, resUrl } from '../lib/imageUrl';
 
 export default function ProductCard({ p, showDesc = true, showActions = true }) {
   const { add, qtyOf, flyToCart } = useCart();
@@ -42,7 +42,7 @@ return (
             <img
               loading="lazy"
               className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-              src={sdUrl(p.imagen_url, 600)}
+              src={resUrl(sdUrl(p.imagen_url, 600))}
               alt={p.titulo}
               onError={(e) => onImgFallback(e, p.imagen_url)}
             />

@@ -10,7 +10,7 @@ import { api } from '../lib/api';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
 import { isSoldOut, stockOf, variantPrice, variantStock, variantOf, variantGroups, swatchOf, isColorGroup } from '../lib/format';
-import { sdUrl, onImgFallback } from '../lib/imageUrl';
+import { sdUrl, onImgFallback, resUrl } from '../lib/imageUrl';
 import { setSeo, SITE } from '../lib/seo';
 
 function galleryImages(p, selectedVariant) {
@@ -263,7 +263,7 @@ export default function ProductPage() {
                       <div key={i} className="gallery-slide">
                         {i <= activeIdx + 1 ? (
                           <img
-                            src={sdUrl(u, 900)}
+                            src={resUrl(sdUrl(u, 900))}
                             alt={tp.titulo}
                             draggable={false}
                             onError={(e) => onImgFallback(e, u)}
@@ -279,7 +279,7 @@ export default function ProductPage() {
                       <img
                         key={i}
                         className={`thumb ${i === activeIdx ? 'active' : ''}`}
-                        src={sdUrl(u, 120)}
+                        src={resUrl(sdUrl(u, 120))}
                         alt={tp.titulo}
                         onClick={() => setActiveIdx(i)}
                         onError={(e) => onImgFallback(e, u)}
@@ -291,7 +291,7 @@ export default function ProductPage() {
             )}
             {lightbox && imgs.length > 0 ? (
               <Lightbox
-                images={imgs}
+                images={imgs.map(resUrl)}
                 index={activeIdx}
                 onClose={() => setLightbox(false)}
                 onNavigate={setActiveIdx}

@@ -9,7 +9,7 @@ import VariantManager from '../components/admin/VariantManager';
 import { AdminListSkeleton } from '../components/admin/AdminSkeleton';
 import { api, adminSessionValid, estadoColor } from '../lib/api';
 import { useLang } from '../lib/i18n';
-import { sdUrl, onImgFallback } from '../lib/imageUrl';
+import { sdUrl, onImgFallback, resUrl } from '../lib/imageUrl';
 import { variantGroups } from '../lib/format';
 import { setSeo, DEFAULT_DESC } from '../lib/seo';
 
@@ -533,7 +533,7 @@ export default function AdminPage() {
                       return (
                         <div className="cat-row" key={p.id} onClick={() => setVariacionesModal({ type: 'edit', id: p.id, product: p })}>
                           <div className="vm-avatar">
-                            {p.imagen_url ? <img loading="lazy" src={sdUrl(p.imagen_url, 100)} alt="" onError={(e) => onImgFallback(e, p.imagen_url)} /> : null}
+                            {p.imagen_url ? <img loading="lazy" src={resUrl(sdUrl(p.imagen_url, 100))} alt="" onError={(e) => onImgFallback(e, p.imagen_url)} /> : null}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="cat-name">{p.titulo}</div>
@@ -581,7 +581,7 @@ export default function AdminPage() {
                     allProducts.map((p) => (
                       <div className="admin-list-item" key={p.id}>
                         <div className="admin-list-thumb">
-                          {p.imagen_url ? <img loading="lazy" src={sdUrl(p.imagen_url, 200)} alt="" onError={(e) => onImgFallback(e, p.imagen_url)} /> : null}
+                          {p.imagen_url ? <img loading="lazy" src={resUrl(sdUrl(p.imagen_url, 200))} alt="" onError={(e) => onImgFallback(e, p.imagen_url)} /> : null}
                         </div>
                         <div className="admin-list-info">
                           <div className="admin-list-title">{p.titulo}</div>
