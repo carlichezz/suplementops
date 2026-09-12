@@ -9,7 +9,7 @@ import Lightbox from '../components/Lightbox';
 import { api } from '../lib/api';
 import { useCart } from '../lib/cart';
 import { useLang } from '../lib/i18n';
-import { isSoldOut, stockOf, variantPrice, variantStock, variantOf, variantGroups, colorHex, isColorGroup } from '../lib/format';
+import { isSoldOut, stockOf, variantPrice, variantStock, variantOf, variantGroups, swatchOf, isColorGroup } from '../lib/format';
 import { sdUrl, onImgFallback } from '../lib/imageUrl';
 import { setSeo, SITE } from '../lib/seo';
 
@@ -187,6 +187,15 @@ export default function ProductPage() {
     [current, all, lang]
   );
 
+  // Metadatos de grupos persistidos en el admin (grupo de color + color RGB por opción).
+  const colorDefs = useMemo(() => {
+    const m = {};
+    (Array.isArray(current && current.atributos) ? current.atributos : []).forEach((g) => {
+      if (g && g.nombre) m[String(g.nombre).trim()] = g;
+    });
+    return m;
+  }, [current]);
+
   if (status !== 'loaded') {
     return (
       <>
@@ -300,7 +309,8 @@ export default function ProductPage() {
             {hasGroups ? (
               <div className="product-options">
                 {groups.map((g) => {
-                  const colorGroup = isColorGroup(g.nombre);
+                  const def = colorDefs[g.nombre] || {};
+                  const colorGroup = def.esColor === true || isColorGroup(g.nombre);
                   return (
                     <div className="var-group" key={g.nombre}>
                       <span className="var-group-label">{g.nombre}</span>
@@ -311,7 +321,7 @@ export default function ProductPage() {
                               type="button"
                               key={op}
                               className={`var-chip var-chip-color${sel[g.nombre] === op ? ' active' : ''}`}
-                              style={{ '--swatch': colorHex(op) }}
+                              style={{ '--swatch': swatchOf(def.colores, op) }}
                               onClick={() => setSel((s) => ({ ...s, [g.nombre]: op }))}
                               aria-pressed={sel[g.nombre] === op}
                             >

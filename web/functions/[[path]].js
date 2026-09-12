@@ -38,22 +38,46 @@ export async function onRequestGet(context) {
   }
 
   // Admin y checkout: no se indexan, pero sirven el mismo SPA (head noindex).
-  if (path === '/admin' || path === '/checkout') {
+  // Se matchea también el slash final (p. ej. /checkout/) para no filtrar el head indexable.
+  if (path === '/admin' || path.startsWith('/admin/')) {
     const shell = await fetchShell(env, request, next);
-    const title = path === '/admin' ? 'Administrar · Catálogo Suplementos' : 'Finalizar compra · Suplementos Deportivos';
     return htmlResponse(
       pageHtml(shell, {
-        title,
+        title: 'Administrar · Catálogo Suplementos',
         description: DEFAULT_DESC,
-        canonical: path,
+        canonical: '/admin',
+        noindex: true,
+      })
+    );
+  }
+  if (path === '/checkout' || path.startsWith('/checkout/')) {
+    const shell = await fetchShell(env, request, next);
+    return htmlResponse(
+      pageHtml(shell, {
+        title: 'Finalizar compra · Suplementos Deportivos',
+        description: DEFAULT_DESC,
+        canonical: '/checkout',
         noindex: true,
       })
     );
   }
 
   // Páginas de producto: prerenderizamos head + JSON-LD Product para bots / compartir.
-  const m = /^\/product\/(\d+)/.exec(path);
-  if (m) {
+  // Solo aceptamos /product/<id> numérico; cualquier otra ruta "product" es 404 noindex.
+  if (path.startsWith('/product/')) {
+    const m = /^\/product\/(\d+)/.exec(path);
+    if (!m) {
+      const shell = await fetchShell(env, request, next);
+      return htmlResponse(
+        pageHtml(shell, {
+          title: 'Producto no encontrado · Suplementos Deportivos',
+          description: DEFAULT_DESC,
+          canonical: path,
+          noindex: true,
+        }),
+        404
+      );
+    }
     const id = Number(m[1]);
     const product = await loadProduct(env, id);
     if (!product) {

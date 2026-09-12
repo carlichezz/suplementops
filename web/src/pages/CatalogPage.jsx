@@ -45,7 +45,7 @@ export default function CatalogPage() {
   }, [q, currentCat, currentSort]);
 
   useEffect(() => {
-    setSeo({ title: t('page.title'), description: DEFAULT_DESC, image: '', canonical: SITE });
+    setSeo({ title: `${t('page.title')} · Catálogo`, description: DEFAULT_DESC, image: '', canonical: SITE });
   }, [lang]);
 
   const cats = useMemo(() => {
@@ -99,6 +99,30 @@ export default function CatalogPage() {
     obs.observe(el);
     return () => obs.disconnect();
   }, [items.length, shown]);
+
+  // Fallback por scroll: garantiza que el listado siga creciendo aunque el
+  // sentinel no dispare (p. ej. al volver de una vista de producto con el
+  // scroll restaurado, la lista se re-monta con ~8 items y el observer de
+  // IntersectionObserver puede quedar "colgado").
+  useEffect(() => {
+    if (shown >= items.length) return undefined;
+    const loadMore = () => {
+      const doc = document.documentElement;
+      if (doc.scrollHeight - window.scrollY - window.innerHeight < 900) {
+        setShown((s) => Math.min(items.length, s + LOAD_CHUNK));
+      }
+    };
+    window.addEventListener('scroll', loadMore, { passive: true });
+    window.addEventListener('resize', loadMore, { passive: true });
+    const t1 = setTimeout(loadMore, 150);
+    const t2 = setTimeout(loadMore, 700);
+    return () => {
+      window.removeEventListener('scroll', loadMore);
+      window.removeEventListener('resize', loadMore);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [shown, items.length]);
 
   const chipClass = (active) =>
     `cat-chip btn btn-sm rounded-full ${active ? 'btn-accent text-white' : 'bg-base-100 text-base-content border-0 shadow-sm'}`;

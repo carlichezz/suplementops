@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { api, uploadImage } from '../../lib/api';
 import { useLang } from '../../lib/i18n';
+import { swatchOf } from '../../lib/format';
 
 function comboKey(atributos) {
   return Object.entries(atributos || {})
@@ -13,10 +14,14 @@ function parseGrupos(raw) {
   return raw
     .map((g) => ({
       nombre: (g.nombre || '').trim(),
-      opciones: String(g.opciones || '')
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
+      opciones: Array.isArray(g.opciones)
+        ? g.opciones.map((s) => String(s).trim()).filter(Boolean)
+        : String(g.opciones || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean),
+      esColor: !!g.esColor,
+      colores: g.colores && typeof g.colores === 'object' ? g.colores : {},
     }))
     .filter((g) => g.nombre && g.opciones.length);
 }
@@ -49,11 +54,22 @@ function mergeWithDefaults(variantes, defaults) {
   });
 }
 
-const EMPTY_GRUPO = { nombre: '', opciones: '' };
+const EMPTY_GRUPO = { nombre: '', opciones: '', esColor: false, colores: {} };
 
 export default function VariantManager({ product, onDone, showAlert }) {
   const { t } = useLang();
   const [grupos, setGrupos] = useState(() => {
+    // 1) Si el producto ya tiene grupos guardados (con metadatos de color),
+    //    los usamos como fuente de verdad.
+    if (Array.isArray(product.atributos) && product.atributos.length) {
+      return product.atributos.map((ag) => ({
+        nombre: ag.nombre || '',
+        opciones: Array.isArray(ag.opciones) ? ag.opciones.join(', ') : String(ag.opciones || ''),
+        esColor: !!ag.esColor,
+        colores: ag.colores && typeof ag.colores === 'object' ? ag.colores : {},
+      }));
+    }
+    // 2) Si no, derivamos los grupos a partir de las variantes existentes.
     const existing = Array.isArray(product.variaciones) && product.variaciones.length
       ? (() => {
           const g = new Map();
@@ -67,7 +83,7 @@ export default function VariantManager({ product, onDone, showAlert }) {
               if (!arr.includes(val)) arr.push(val);
             }
           }
-          return [...g.entries()].map(([nombre, opciones]) => ({ nombre, opciones: opciones.join(', ') }));
+          return [...g.entries()].map(([nombre, opciones]) => ({ nombre, opciones: opciones.join(', '), esColor: false, colores: {} }));
         })()
       : [{ ...EMPTY_GRUPO }];
     return existing.length ? existing : [{ ...EMPTY_GRUPO }];
@@ -91,6 +107,20 @@ export default function VariantManager({ product, onDone, showAlert }) {
     setGruposDirty(true);
     const n = [...grupos];
     n[i] = { ...n[i], [e.target.name]: e.target.value };
+    setGrupos(n);
+  };
+
+  const toggleColor = (i) => (e) => {
+    setGruposDirty(true);
+    const n = [...grupos];
+    n[i] = { ...n[i], esColor: e.target.checked };
+    setGrupos(n);
+  };
+
+  const setColorOp = (i, op) => (e) => {
+    setGruposDirty(true);
+    const n = [...grupos];
+    n[i] = { ...n[i], colores: { ...(n[i].colores || {}), [op]: e.target.value } };
     setGrupos(n);
   };
 
@@ -176,23 +206,48 @@ export default function VariantManager({ product, onDone, showAlert }) {
       </div>
 
       {grupos.map((g, i) => (
-        <div className="var-group-row" key={i}>
-          <input
-            className="input rel-1"
-            name="nombre"
-            placeholder={t('pm.vars.group.name')}
-            value={g.nombre}
-            onChange={setGrupo(i)}
-          />
-          <input
-            className="input rel-2"
-            name="opciones"
-            placeholder={t('pm.vars.group.opts')}
-            value={g.opciones}
-            onChange={setGrupo(i)}
-          />
-          {grupos.length > 1 ? (
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeGrupo(i)}>×</button>
+        <div className="var-group-block" key={i}>
+          <div className="var-group-row">
+            <input
+              className="input rel-1"
+              name="nombre"
+              placeholder={t('pm.vars.group.name')}
+              value={g.nombre}
+              onChange={setGrupo(i)}
+            />
+            <input
+              className="input rel-2"
+              name="opciones"
+              placeholder={t('pm.vars.group.opts')}
+              value={g.opciones}
+              onChange={setGrupo(i)}
+            />
+            {grupos.length > 1 ? (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeGrupo(i)}>×</button>
+            ) : null}
+          </div>
+          <label className="vars-color-check">
+            <input type="checkbox" checked={!!g.esColor} onChange={toggleColor(i)} />
+            <span>{t('vm.color.group')}</span>
+          </label>
+          {g.esColor && String(g.opciones).trim() ? (
+            <div className="vars-colors">
+              {String(g.opciones)
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean)
+                .map((op) => (
+                  <label className="vars-color-item" key={op}>
+                    <input
+                      type="color"
+                      value={swatchOf(g.colores, op)}
+                      onChange={setColorOp(i, op)}
+                      aria-label={op}
+                    />
+                    <span>{op}</span>
+                  </label>
+                ))}
+            </div>
           ) : null}
         </div>
       ))}

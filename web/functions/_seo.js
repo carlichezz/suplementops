@@ -149,6 +149,15 @@ export async function buildProductPage(env, request, product, nextFn) {
   const rating = parseRating(product.rating);
   const reviews = parseReviews(product.num_reviews);
   const price = priceNum(product.precio);
+  const aggregateRating =
+    rating != null && rating > 0 && reviews != null && reviews > 0
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: Math.min(5, rating).toFixed(1),
+          reviewCount: reviews,
+          bestRating: 5,
+        }
+      : undefined;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -169,15 +178,7 @@ export async function buildProductPage(env, request, product, nextFn) {
       itemCondition: 'https://schema.org/NewCondition',
       seller: { '@type': 'Store', name: 'Catálogo Suplementos Deportivos' },
     },
-    aggregateRating:
-      rating != null
-        ? {
-            '@type': 'AggregateRating',
-            ratingValue: Math.min(5, rating).toFixed(1),
-            reviewCount: reviews || 1,
-            bestRating: 5,
-          }
-        : undefined,
+    aggregateRating,
   };
 
   const shell = await fetchShell(env, request, nextFn);
@@ -192,7 +193,7 @@ export async function buildProductPage(env, request, product, nextFn) {
 
 export async function buildSitemap(env) {
   const { results } = await env.DB.prepare(
-    'SELECT id, scrapeado_en FROM productos ORDER BY id ASC'
+    'SELECT id, scrapeado_en FROM productos WHERE publicado = 1 ORDER BY id ASC'
   ).all().catch(() => ({ results: [] }));
 
   const now = new Date().toISOString().slice(0, 10);

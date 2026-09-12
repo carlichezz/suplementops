@@ -15,3 +15,11 @@
 
 /robots.txt
   Cache-Control: public, max-age=86400
+
+/sw.js
+  ! Cache-Control
+  Cache-Control: no-cache, must-revalidate
+
+/*.webp
+  ! Cache-Control
+  Cache-Control: public, max-age=604800

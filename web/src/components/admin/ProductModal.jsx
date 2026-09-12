@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { api, uploadImage } from '../../lib/api';
 import { useLang } from '../../lib/i18n';
+import { swatchOf } from '../../lib/format';
 
 const EMPTY_FORM = {
   titulo: '',
@@ -11,7 +12,7 @@ const EMPTY_FORM = {
   publicado: 1,
 };
 
-const EMPTY_GRUPO = { nombre: '', opciones: '' };
+const EMPTY_GRUPO = { nombre: '', opciones: '', esColor: false, colores: {} };
 
 function comboKey(atributos) {
   return Object.entries(atributos || {})
@@ -24,10 +25,14 @@ function parseGrupos(grupos) {
   return grupos
     .map((g) => ({
       nombre: (g.nombre || '').trim(),
-      opciones: String(g.opciones || '')
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
+      opciones: Array.isArray(g.opciones)
+        ? g.opciones.map((s) => String(s).trim()).filter(Boolean)
+        : String(g.opciones || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean),
+      esColor: !!g.esColor,
+      colores: g.colores && typeof g.colores === 'object' ? g.colores : {},
     }))
     .filter((g) => g.nombre && g.opciones.length);
 }
@@ -99,7 +104,12 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
         publicado: product.publicado == null ? 1 : Number(product.publicado),
       });
       const g = Array.isArray(product.atributos) && product.atributos.length
-        ? product.atributos.map((ag) => ({ nombre: ag.nombre, opciones: (ag.opciones || []).join(', ') }))
+        ? product.atributos.map((ag) => ({
+            nombre: ag.nombre,
+            opciones: (ag.opciones || []).join(', '),
+            esColor: !!ag.esColor,
+            colores: ag.colores && typeof ag.colores === 'object' ? ag.colores : {},
+          }))
         : [{ ...EMPTY_GRUPO }];
       setGrupos(g);
       setVariantes(
@@ -149,6 +159,18 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
   const setGrupo = (i) => (e) => {
     const n = [...grupos];
     n[i] = { ...n[i], [e.target.name]: e.target.value };
+    setGrupos(n);
+  };
+
+  const toggleColor = (i) => (e) => {
+    const n = [...grupos];
+    n[i] = { ...n[i], esColor: e.target.checked };
+    setGrupos(n);
+  };
+
+  const setColorOp = (i, op) => (e) => {
+    const n = [...grupos];
+    n[i] = { ...n[i], colores: { ...(n[i].colores || {}), [op]: e.target.value } };
     setGrupos(n);
   };
 
@@ -267,23 +289,43 @@ export default function ProductModal({ open, product, categorias, onClose, onSho
             <summary>{t('pm.vars.title')}</summary>
             <p className="vars-hint">{t('pm.vars.hint')}</p>
             {grupos.map((g, i) => (
-              <div className="var-group-row" key={i}>
-                <input
-                  className="input rel-1"
-                  name="nombre"
-                  placeholder={t('pm.vars.group.name')}
-                  value={g.nombre}
-                  onChange={setGrupo(i)}
-                />
-                <input
-                  className="input rel-2"
-                  name="opciones"
-                  placeholder={t('pm.vars.group.opts')}
-                  value={g.opciones}
-                  onChange={setGrupo(i)}
-                />
-                {grupos.length > 1 ? (
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeGrupo(i)}>×</button>
+              <div className="var-group-block" key={i}>
+                <div className="var-group-row">
+                  <input
+                    className="input rel-1"
+                    name="nombre"
+                    placeholder={t('pm.vars.group.name')}
+                    value={g.nombre}
+                    onChange={setGrupo(i)}
+                  />
+                  <input
+                    className="input rel-2"
+                    name="opciones"
+                    placeholder={t('pm.vars.group.opts')}
+                    value={g.opciones}
+                    onChange={setGrupo(i)}
+                  />
+                  {grupos.length > 1 ? (
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeGrupo(i)}>×</button>
+                  ) : null}
+                </div>
+                <label className="vars-color-check">
+                  <input type="checkbox" checked={!!g.esColor} onChange={toggleColor(i)} />
+                  <span>{t('vm.color.group')}</span>
+                </label>
+                {g.esColor && String(g.opciones).trim() ? (
+                  <div className="vars-colors">
+                    {String(g.opciones)
+                      .split(',')
+                      .map((s) => s.trim())
+                      .filter(Boolean)
+                      .map((op) => (
+                        <label className="vars-color-item" key={op}>
+                          <input type="color" value={swatchOf(g.colores, op)} onChange={setColorOp(i, op)} aria-label={op} />
+                          <span>{op}</span>
+                        </label>
+                      ))}
+                  </div>
                 ) : null}
               </div>
             ))}

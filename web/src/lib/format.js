@@ -78,3 +78,15 @@ export function colorHex(opcion) {
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 360;
   return `hsl(${h} 62% 42%)`;
 }
+
+export const SWATCH_FALLBACK = '#cccccc';
+
+// Color a mostrar en el swatch: el guardado en el admin (RGB) o, si no hay,
+// un color deducido del nombre de la opción. Nunca devuelve un valor inválido
+// para <input type="color">.
+export function swatchOf(colores, opcion) {
+  const c = colores && colores[opcion];
+  if (c && c !== 'transparent') return c;
+  const h = colorHex(opcion);
+  return h === 'transparent' ? SWATCH_FALLBACK : h;
+}
